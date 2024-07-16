@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css'
-	
+
   import { setupConvex } from 'convex-svelte';
   import { PUBLIC_CONVEX_URL } from '$env/static/public';
   import { setContext } from 'svelte';

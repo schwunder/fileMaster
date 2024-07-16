@@ -13,9 +13,9 @@ const config = {
 		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
 		adapter: adapter(),
 		alias: {
-			$convex: './src/convex',
-			$lib: './src/lib',
-			$components: './src/lib/components'
+			$convex: 'src/convex',
+			$lib: 'src/lib',
+			$components: 'src/lib/components'
 		}
 	},
 	optimizeDeps: {

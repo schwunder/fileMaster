@@ -3,6 +3,10 @@
     import { useConvexClient, useQuery } from 'convex-svelte'
     import { api } from '$convex/_generated/api.js'
     import type { Id } from '$convex/_generated/dataModel' // Corrected import path
+    import { Button } from "$lib/components/ui/button";
+    import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
+
+
   
   
   
@@ -14,6 +18,21 @@
     console.log('error:', meta.error)
     console.log('images:', meta.data)
     console.log('stale:', meta.isStale )
+    const sampleTags: string[] = [
+    "screenshot",
+    "passport",
+    "document",
+    "bill",
+    "family",
+    "city",
+    "vacation",
+    "landscape",
+    "pet",
+    "art",
+    "male",
+    "female",
+  ];
+  let selectedTags: string[] = [...sampleTags]; // Initialize with all sample tags selected
   
     async function handleScanDirectory(): Promise<void> {
       try {
@@ -48,9 +67,9 @@
   
   <header class="bg-blue-500 text-white p-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold">Images Gallery with Tags and Description and Suggested Title</h1>
-    <button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={handleScanDirectory}>
+    <Button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={handleScanDirectory}>
       Scan Directory
-    </button>
+    </Button>
   </header>
   
   <main class="p-4">
@@ -61,9 +80,9 @@
     {:else if meta.data && meta.data.length > 0}
       <div class="grid grid-cols-3 gap-4 mt-4">
         {#each meta.data as image}
-        <button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={e => handleDeleteMeta(image._id)}>
+        <Button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={e => handleDeleteMeta(image._id)}>
           Delete meta: {image._id}
-        </button>
+        </Button>
                 <div class="border p-2">
             <!-- svelte-ignore a11y_img_redundant_alt -->
             <img src={`${image.path}`} alt="Gallery image" class="w-full h-48 object-cover" />
@@ -73,6 +92,16 @@
     {:else}
       <p>No images found.</p>
     {/if}
+
+    <ToggleGroup.Root size="lg" type="multiple" bind:value={selectedTags}>
+      {#each sampleTags as tag}
+        <ToggleGroup.Item value={tag} aria-label="Toggle {tag}">
+          <div style="display: inline-block; margin: 0 4px; cursor: pointer; background-color: {selectedTags.includes(tag) ? '#007BFF' : 'initial'}; color: {selectedTags.includes(tag) ? 'white' : 'initial'}; padding: 4px 8px; border-radius: 4px;">
+            {tag}
+          </div>
+        </ToggleGroup.Item>
+      {/each}
+    </ToggleGroup.Root>
   </main>
   
   <footer class="bg-gray-800 text-white p-4 text-center">
