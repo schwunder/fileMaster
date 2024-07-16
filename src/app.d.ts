@@ -10,4 +10,9 @@ declare global {
 	}
 }
 
+declare const fullApi: ApiFromModules<{
+	images: typeof images;
+}>;
+export declare const api: FilterApi<typeof fullApi, FunctionReference<unknown, 'public'>>;
+
 export {};
