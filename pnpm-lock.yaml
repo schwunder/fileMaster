@@ -20,6 +20,18 @@ importers:
       convex-svelte:
         specifier: ^0.0.9
         version: 0.0.9(convex@1.13.0(eslint@9.7.0))(svelte@5.0.0-next.185)
+      embla-carousel-auto-height:
+        specifier: ^8.1.6
+        version: 8.1.6(embla-carousel@8.1.6)
+      embla-carousel-autoplay:
+        specifier: ^8.1.6
+        version: 8.1.6(embla-carousel@8.1.6)
+      embla-carousel-class-names:
+        specifier: ^8.1.6
+        version: 8.1.6(embla-carousel@8.1.6)
+      embla-carousel-fade:
+        specifier: ^8.1.6
+        version: 8.1.6(embla-carousel@8.1.6)
       embla-carousel-svelte:
         specifier: ^8.1.6
         version: 8.1.6(svelte@5.0.0-next.185)
@@ -949,6 +961,26 @@ packages:
 
   electron-to-chromium@1.4.828:
     resolution: {integrity: sha512-QOIJiWpQJDHAVO4P58pwb133Cwee0nbvy/MV1CwzZVGpkH1RX33N3vsaWRCpR6bF63AAq366neZrRTu7Qlsbbw==}
+
+  embla-carousel-auto-height@8.1.6:
+    resolution: {integrity: sha512-vK1To87AEyPSF1Xi932KC7kxSf/v+qnTIdZffbxd/TP1uMfFpxwWEpJt2mk+Ew/OS6xiFcT04YtPx1fODey1XA==}
+    peerDependencies:
+      embla-carousel: 8.1.6
+
+  embla-carousel-autoplay@8.1.6:
+    resolution: {integrity: sha512-e5n9f4q+DVeBPiPPT3gwzqpiqfae8aP8fQACS4OZkPFvFLdsVhnWcw+cwtewryP7snWJGKPXEMA1GOjieEKv+w==}
+    peerDependencies:
+      embla-carousel: 8.1.6
+
+  embla-carousel-class-names@8.1.6:
+    resolution: {integrity: sha512-lBe3Z9MZZID9Ls1sto7y8M9t10qaRve90B0npCGzelHowf0T47GM5sASpaF1YoBUWOkxenof3elnYRTV3JF59w==}
+    peerDependencies:
+      embla-carousel: 8.1.6
+
+  embla-carousel-fade@8.1.6:
+    resolution: {integrity: sha512-5fUPjHaLO97ldycR+6yVMU5jN31rfblHKS+B/oovsYHFOMtuuNpiF7I093xms8FOx0v1HRWVla4O+mclOZq2zw==}
+    peerDependencies:
+      embla-carousel: 8.1.6
 
   embla-carousel-reactive-utils@8.1.6:
     resolution: {integrity: sha512-Wg+J2YoqLqkaqsXi7fTJaLmXm6BpgDRJ0EfTdvQ4KE/ip5OsUuKGpJsEQDTt4waGXSDyZhIBlfoQtgGJeyYQ1Q==}
@@ -2812,6 +2844,22 @@ snapshots:
   eastasianwidth@0.2.0: {}
 
   electron-to-chromium@1.4.828: {}
+
+  embla-carousel-auto-height@8.1.6(embla-carousel@8.1.6):
+    dependencies:
+      embla-carousel: 8.1.6
+
+  embla-carousel-autoplay@8.1.6(embla-carousel@8.1.6):
+    dependencies:
+      embla-carousel: 8.1.6
+
+  embla-carousel-class-names@8.1.6(embla-carousel@8.1.6):
+    dependencies:
+      embla-carousel: 8.1.6
+
+  embla-carousel-fade@8.1.6(embla-carousel@8.1.6):
+    dependencies:
+      embla-carousel: 8.1.6
 
   embla-carousel-reactive-utils@8.1.6(embla-carousel@8.1.6):
     dependencies:
