@@ -2,18 +2,22 @@
     import { type CarouselAPI } from "$lib/components/ui/carousel/context.js";
     import * as Carousel from "$lib/components/ui/carousel/index.js";
     import { Button } from "$lib/components/ui/button";
-    import Autoplay from "embla-carousel-autoplay";
-    import AutoHeight from "embla-carousel-auto-height";
-    import ClassNames from 'embla-carousel-class-names';
-    import Fade from 'embla-carousel-fade';
+    import Autoplay, { type AutoplayType } from "embla-carousel-autoplay";
+    import AutoHeight, { type AutoHeightType } from "embla-carousel-auto-height";
+    import ClassNames, { type ClassNamesType } from 'embla-carousel-class-names';
+    import Fade, { type FadeType } from 'embla-carousel-fade';
     import { tweened } from 'svelte/motion';
     import { cubicOut } from 'svelte/easing';
     import { onMount } from 'svelte';
     import FileCard from '$lib/components/FileCard.svelte';         
     import { AspectRatio } from "$lib/components/ui/aspect-ratio";
     
+    type EmblaPluginType = AutoplayType | AutoHeightType | ClassNamesType | FadeType;
+
     export let sortedMetaDataArray: Array<{
-      imgPath: string;
+      _id: string;
+      _creationTime: string;
+      path: string;
       title: string;
       description: string;
       tags: string[];
@@ -28,6 +32,16 @@
     let activeImg: string | null = null;
     let isCarouselActive = true;
     let activeImgPosition = { top: 0, left: 0, width: 0, height: 0 };
+    let plugins: EmblaPluginType[] = [
+      AutoHeight(),
+      ClassNames({
+        snapped: 'is-snapped',
+        inView: 'is-in-view',
+        draggable: 'is-draggable',
+        dragging: 'is-dragging'
+      }),
+      Fade()
+    ];
   
     $: if (api) {
       count = api.scrollSnapList().length;
@@ -47,13 +61,12 @@
   
     const toggleCarouselAutoplay = () => {
       autoplayEnabled = !autoplayEnabled;
-      if (api) {
-        if (autoplayEnabled) {
-          api.plugins().autoplay.play();
-        } else {
-          api.plugins().autoplay.stop();
-        }
+      if (autoplayEnabled) {
+        plugins = [...plugins, Autoplay({ delay: 2000 })];
+      } else {
+        plugins = plugins.filter(plugin => plugin.name !== 'autoplay');
       }
+      api?.reInit();
     };
   
     const setActiveImage = (imgUrl: string, event: Event) => {
@@ -67,6 +80,12 @@
       console.log("Closing the active image overlay");
       activeImg = null;
     };
+  
+    $: {
+      if (api && plugins) {
+        api.reInit();
+      }
+    }
   </script>
   
   <!-- Autoplay Toggle Button -->
@@ -74,17 +93,7 @@
     {autoplayEnabled ? 'Stop Autoplay' : 'Start Autoplay'}
   </Button>
   
-  <Carousel.Root bind:api plugins={[
-    ...(autoplayEnabled ? [Autoplay({ delay: 2000 })] : []),
-    AutoHeight(),
-    ClassNames({
-      snapped: 'is-snapped',
-      inView: 'is-in-view',
-      draggable: 'is-draggable',
-      dragging: 'is-dragging'
-    }),
-    Fade()
-  ]}>
+  <Carousel.Root bind:api {plugins}>
     <div class="text-xl font-bold mb-4">{folderPath}</div>
     <div class="text-sm mb-2">Slide {$current} of {count}</div>
     <Carousel.Content class="carousel-container -ml-2 md:-ml-4"
@@ -93,9 +102,9 @@
       {#each sortedMetaDataArray as metaData, i}
         <Carousel.Item class="carousel-item pl-2 md:pl-4"
                        style="opacity: {1 - Math.abs($current - (i + 1)) * 0.5}"
-                       on:click={(e) => setActiveImage(metaData.imgPath, e)}>
+                       on:click={(e) => setActiveImage(metaData.path, e)}>
           <div class:is-prev={i === $current - 2} class:is-next={i === $current}>
-            <FileCard {metaData} onImageClick={setActiveImage} />
+            <FileCard {metaData} onFileClick={setActiveImage} />
           </div>
         </Carousel.Item>
       {/each}

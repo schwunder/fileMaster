@@ -2,14 +2,12 @@
     import type { PageData } from './$types'
     import { useConvexClient, useQuery } from 'convex-svelte'
     import { api } from '$convex/_generated/api.js'
-    import type { Id } from '$convex/_generated/dataModel' // Corrected import path
+    import type { Id } from '$convex/_generated/dataModel' 
     import { Button } from "$lib/components/ui/button";
     import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
+    import { imageMetaSchema } from '$lib/schemas';
+	import CardCarousel from '$lib/components/CardCarousel.svelte';
 
-
-  
-  
-  
     const client = useConvexClient()
     const meta = useQuery(api.meta.getAll, {}) // Destructure data, isLoading, and error from useQuery
    
@@ -34,7 +32,7 @@
   ];
   let selectedTags: string[] = [...sampleTags]; // Initialize with all sample tags selected
   
-    async function handleScanDirectory(): Promise<void> {
+    async function handleScanImageDirectory(): Promise<void> {
       try {
           const response = await fetch('/api/scan-image-directory');
           if (!response.ok) {
@@ -43,12 +41,42 @@
           const data = await response.json();
           
           for (const filePath of data.files) {
-              await client.mutation(api.meta.addMeta, { path: filePath, type: "image" });
+              //await client.mutation(api.meta.addMeta, { path: filePath, type: "image" });
           }
           console.log("Images added successfully");
       } catch (error) {
           console.error("Error scanning directory:", error);
       }
+  }
+  async function handleScanJsonDirectory(): Promise<void> {
+    try {
+        const response = await fetch('/api/scan-json-directory');
+        if (!response.ok) {
+            throw new Error('Failed to scan directory');
+        }
+        const data = await response.json();
+        console.log("data:", data);
+
+        for (const { filePath, metadata } of data) {
+            console.log("Processing file:", filePath);
+            for (const meta of metadata) {
+                // Validate metadata using imageMetaSchema
+                const parsedMeta = imageMetaSchema.parse(meta);
+                await client.mutation(api.meta.addMeta, {
+                    path: parsedMeta.path,
+                    type: parsedMeta.type,
+                    title: parsedMeta.title,
+                    description: parsedMeta.description,
+                    tags: parsedMeta.tags,
+                    matchingTags: parsedMeta.matchingTags,
+                    embedding: parsedMeta.embedding,
+                });
+            }
+        }
+        console.log("Jsons added successfully");
+    } catch (error) {
+        console.error("Error scanning directory:", error);
+    }
   }
   
     async function handleDeleteMeta(id: string): Promise<void> {
@@ -67,8 +95,11 @@
   
   <header class="bg-blue-500 text-white p-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold">Images Gallery with Tags and Description and Suggested Title</h1>
-    <Button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={handleScanDirectory}>
-      Scan Directory
+    <Button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={handleScanImageDirectory}>
+      Scan Image Directory
+    </Button>
+    <Button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={handleScanJsonDirectory}>
+      Scan Json Directory
     </Button>
   </header>
   
@@ -78,17 +109,7 @@
     {:else if meta.error}
       <p>Error loading images: {meta.error}</p>
     {:else if meta.data && meta.data.length > 0}
-      <div class="grid grid-cols-3 gap-4 mt-4">
-        {#each meta.data as image}
-        <Button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={e => handleDeleteMeta(image._id)}>
-          Delete meta: {image._id}
-        </Button>
-                <div class="border p-2">
-            <!-- svelte-ignore a11y_img_redundant_alt -->
-            <img src={`${image.path}`} alt="Gallery image" class="w-full h-48 object-cover" />
-          </div>
-        {/each}
-      </div>
+        <CardCarousel sortedMetaDataArray={meta.data} folderPath="" />
     {:else}
       <p>No images found.</p>
     {/if}

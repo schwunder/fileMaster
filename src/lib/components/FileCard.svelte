@@ -8,13 +8,15 @@
    //import { processImage, writeData, filterTags } from "../api";
   
     export let metaData: {
-      imgPath: string;
+      _id: string;
+      _creationTime: string;
+      path: string;
       title: string;
       description: string;
       tags: string[];
       matchingTags: string[];
     };
-    export let onImageClick: (imgUrl: string, event: MouseEvent) => void = () => {};
+    export let onFileClick: (fileUrl: string, event: MouseEvent) => void = () => {};
     let selectedTags: string[] = [];
     let selectedMatchingTags: string[] = [];
     let isChecked: boolean = false;
@@ -34,16 +36,16 @@
   ];
 // patch db on assign tags from samples
   </script>
-  
+
   <Card.Root class="max-w-[450px] mx-auto p-4 bg-white rounded-md shadow-md">
     <Card.Header class="flex items-center">
-      <Card.Title>{metaData.imgPath.split("/").pop()}</Card.Title>
+      <Card.Title>{metaData.path.split("/").pop()}</Card.Title>
       <Checkbox class="ml-auto" bind:checked={isChecked} />
     </Card.Header>
     <Card.Content>
       <AspectRatio ratio={16 / 9} class="bg-muted w-full">
-        <Button on:click={(e) => { /*processImage(metaData.imgPath);*/ onImageClick(metaData.imgPath, e); }} variant="ghost" class="w-full h-full">
-          <img src={`http://localhost:3000/${metaData.imgPath}`} alt={""} class="rounded-md object-contain w-full h-full" />
+        <Button on:click={(e) => { /*processImage(metaData.path);*/ onFileClick(metaData.path, e); }} variant="ghost" class="w-full h-full">
+          <img src={metaData.path} alt={""} class="rounded-md object-contain w-full h-full" />
         </Button>
       </AspectRatio>
       <Input id="title" bind:value={metaData.title} class="mt-4 w-full" contenteditable="true" />
@@ -64,7 +66,7 @@
       <Input id="description" bind:value={metaData.description} class="mt-4 w-full" contenteditable="true" />
     </Card.Content>
     <Card.Footer class="flex justify-end mt-4">
-      <Button variant="default" class="mr-2" on:click={() => {} /*writeData(metaData.imgPath, metaData.title, metaData.description, metaData.tags);*/}>
+      <Button variant="default" class="mr-2" on:click={() => {} /*writeData(metaData.path, metaData.title, metaData.description, metaData.tags);*/}>
         Write
       </Button>
       <Button variant="secondary" class="mr-2" on:click={() => {} /*filterTags(metaData.description, metaData.tags);*/}>

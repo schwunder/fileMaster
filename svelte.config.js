@@ -15,7 +15,9 @@ const config = {
 		alias: {
 			$convex: 'src/convex',
 			$lib: 'src/lib',
-			$components: 'src/lib/components'
+			$components: 'src/lib/components',
+			$schemas: 'src/lib/schemas',
+			$utilities: 'src/lib/utilities'
 		}
 	},
 	optimizeDeps: {

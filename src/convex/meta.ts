@@ -15,9 +15,25 @@ export const getAll = query(async ({ db }) => {
 });
 
 export const addMeta = mutation({
-	args: { path: v.string(), type: v.string() },
-	handler: async (ctx, { path, type }) => {
-		const newTaskId = await ctx.db.insert('meta', { path, type });
+	args: {
+		path: v.string(),
+		type: v.string(),
+		title: v.string(),
+		description: v.string(),
+		tags: v.array(v.string()),
+		matchingTags: v.array(v.string()),
+		embedding: v.array(v.number())
+	},
+	handler: async (ctx, { path, type, title, description, tags, matchingTags, embedding }) => {
+		const newTaskId = await ctx.db.insert('meta', {
+			path,
+			type,
+			title,
+			description,
+			tags,
+			matchingTags,
+			embedding
+		});
 		return newTaskId;
 	}
 });
