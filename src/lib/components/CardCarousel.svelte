@@ -120,7 +120,7 @@
         <Button on:click={closeActiveImageOverlay} class="w-full h-full">
           <!-- svelte-ignore a11y-img-redundant-alt -->
           <img
-            src={`http://localhost:3000/${activeImg}`}
+            src={activeImg}
             alt="Active image"
             class="h-full w-full rounded-md object-cover"
           />

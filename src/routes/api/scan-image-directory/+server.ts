@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { listFilesImages } from '$lib/utilities/filesys';
+import { listFilesImages } from '$lib/utilities/fileIO';
 import { join } from 'path';
 
 export async function GET() {

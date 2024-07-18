@@ -17,7 +17,8 @@ const config = {
 			$lib: 'src/lib',
 			$components: 'src/lib/components',
 			$schemas: 'src/lib/schemas',
-			$utilities: 'src/lib/utilities'
+			$utilities: 'src/lib/utilities',
+			$types: 'src/types'
 		}
 	},
 	optimizeDeps: {
