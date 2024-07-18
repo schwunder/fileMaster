@@ -37,7 +37,23 @@ export const addMeta = mutation({
 		return newTaskId;
 	}
 });
+export const updateMeta = mutation({
+	args: {
+		id: v.id('meta'),
+		path: v.optional(v.string()),
+		type: v.optional(v.string()),
+		title: v.optional(v.string()),
+		description: v.optional(v.string()),
+		tags: v.optional(v.array(v.string())),
+		matchingTags: v.optional(v.array(v.string())),
+		embedding: v.optional(v.array(v.number()))
+	},
+	handler: async (ctx, args) => {
+		const { id, ...updateFields } = args;
 
+		await ctx.db.patch(id, updateFields);
+	}
+});
 export const deleteMeta = mutation({
 	args: { id: v.id('meta') },
 	handler: async (ctx, args) => {

@@ -32,7 +32,7 @@
   ];
   let selectedTags: string[] = [...sampleTags]; // Initialize with all sample tags selected
   
-    async function handleScanImageDirectory(): Promise<void> {
+  async function handleScanImageDirectory(): Promise<void> {
       try {
           const response = await fetch('/api/scan-image-directory');
           if (!response.ok) {
@@ -78,15 +78,108 @@
         console.error("Error scanning directory:", error);
     }
   }
-  
-    async function handleDeleteMeta(id: string): Promise<void> {
+  async function handleDeleteMeta(id: string): Promise<void> {
       try {
         client.mutation(api.meta.deleteMeta, {id:  id as Id<"meta"> })
         console.log("Meta deleted successfully")
       } catch (error) {
         console.error("Error deleting meta:", error)
       }
+  }
+
+async function handleAddFolder(): Promise<void> {
+    try {
+        const response = await fetch('/api/add-folder');
+        if (!response.ok) {
+            throw new Error('Failed to add folder');
+        }
+        const data = await response.json();
+        console.log("Folder added successfully:", data);
+    } catch (error) {
+        console.error("Error adding folder:", error);
     }
+}
+
+async function handleProcessImagesBatch(): Promise<void> {
+    try {
+        const response = await fetch('/api/process-images-batch');
+        if (!response.ok) {
+            throw new Error('Failed to process images batch');
+        }
+        const data = await response.json();
+        console.log("Images batch processed successfully:", data);
+    } catch (error) {
+        console.error("Error processing images batch:", error);
+    }
+}
+
+async function handleRunTsneVisualization(): Promise<void> {
+    try {
+        const response = await fetch('/api/run-tsne-visualization');
+        if (!response.ok) {
+            throw new Error('Failed to run t-SNE visualization');
+        }
+        const data = await response.json();
+        console.log("t-SNE visualization run successfully:", data);
+    } catch (error) {
+        console.error("Error running t-SNE visualization:", error);
+    }
+}
+
+async function handleUpdateMeta(id: string, imgPath: string): Promise<void> {
+    try {
+        const response = await fetch('/api/update-image-meta', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json' // Set content type to plain text
+          },
+          body: JSON.stringify({path: imgPath, sampleTags: sampleTags}) // Send the image path as plain text
+        });
+        if (!response.ok) {
+            throw new Error('Failed to process image');
+        }
+        const dataWithExtra = await response.json();
+        console.log("Image processed successfully:", dataWithExtra);
+        const data = dataWithExtra.data;
+
+
+        // Ensure the updateMeta mutation is called with the correct fields
+        await client.mutation(api.meta.updateMeta, {
+            id: id as Id<"meta">,
+            title: data.title,
+            description: data.description,
+            tags: data.tags,
+            matchingTags: data.matchingTags,
+            embedding: data.embedding,
+            type: data.type
+        });
+    } catch (error) {
+        console.error("Error processing image:", error);
+    }
+}
+
+async function handleUpdateImageDescription(id: string, imgPath: string): Promise<void> {
+  console.log("imgPath:", imgPath);
+    try {
+        const response = await fetch('/api/update-image-description', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain' // Set content type to plain text
+          },
+          body: imgPath // Send the image path as plain text
+        });
+        if (!response.ok) {
+            throw new Error('Failed to update image description');
+        }
+        const data = await response.json();
+        console.log("Image description updated successfully:", data);
+        const description = data.description;
+        await client.mutation(api.meta.updateMeta, {id: id as Id<"meta">, description});
+    } catch (error) {
+        console.error("Error updating image description:", error); // Corrected error handling
+    }
+}
+
   </script>
   <svelte:head>
     <title>Home</title>
@@ -109,7 +202,12 @@
     {:else if meta.error}
       <p>Error loading images: {meta.error}</p>
     {:else if meta.data && meta.data.length > 0}
-        <CardCarousel sortedMetaDataArray={meta.data} folderPath="" />
+        <CardCarousel 
+        sortedMetaDataArray={meta.data}
+        folderPath="db/media"
+        handleDeleteMeta={handleDeleteMeta}
+       handleUpdateMeta={handleUpdateMeta}
+        />
     {:else}
       <p>No images found.</p>
     {/if}
@@ -128,3 +226,5 @@
   <footer class="bg-gray-800 text-white p-4 text-center">
     <p>© 2023 Sample HTML Page. All rights reserved.</p>
   </footer>
+
+  

@@ -5,7 +5,7 @@
     import { AspectRatio } from "$lib/components/ui/aspect-ratio";
     import { ToggleGroup, ToggleGroupItem } from "$lib/components/ui/toggle-group";
     import { Checkbox } from "$lib/components/ui/checkbox";
-   //import { processImage, writeData, filterTags } from "../api";
+    import IconButton from "$lib/components/IconButton.svelte";
   
     export let metaData: {
       _id: string;
@@ -17,6 +17,8 @@
       matchingTags: string[];
     };
     export let onFileClick: (fileUrl: string, event: MouseEvent) => void = () => {};
+    export let handleDeleteMeta: (id: string) => Promise<void>;
+    export let handleUpdateMeta: (id: string, imgPath: string) => Promise<void>;
     let selectedTags: string[] = [];
     let selectedMatchingTags: string[] = [];
     let isChecked: boolean = false;
@@ -38,42 +40,42 @@
   </script>
 
   <Card.Root class="max-w-[450px] mx-auto p-4 bg-white rounded-md shadow-md">
-    <Card.Header class="flex items-center">
-      <Card.Title>{metaData.path.split("/").pop()}</Card.Title>
-      <Checkbox class="ml-auto" bind:checked={isChecked} />
+    <Card.Header class="flex-row justify-between items-center">
+      <Button variant="default" on:click={() => {} /*writeData(metaData.path, metaData.title, metaData.description, metaData.tags);*/}>
+        Write
+      </Button>
+      <IconButton title="Regenerate meta" onClick={() => handleUpdateMeta(metaData._id, metaData.path)} />
+      <Checkbox class="ml-2" bind:checked={isChecked} />
+      <Card.Title class="ml-2">{metaData.path.split("/").pop()}</Card.Title>
+      <IconButton title="Delete" onClick={() => handleDeleteMeta(metaData._id)} iconType="x" />
     </Card.Header>
     <Card.Content>
       <AspectRatio ratio={16 / 9} class="bg-muted w-full">
-        <Button on:click={(e) => { /*processImage(metaData.path);*/ onFileClick(metaData.path, e); }} variant="ghost" class="w-full h-full">
+        <Button on:click={(e) => { onFileClick(metaData.path, e); }} variant="ghost" class="w-full h-full">
           <img src={metaData.path} alt={""} class="rounded-md object-contain w-full h-full" />
         </Button>
       </AspectRatio>
-      <Input id="title" bind:value={metaData.title} class="mt-4 w-full" contenteditable="true" />
-      <ToggleGroup type="multiple" bind:value={selectedTags} class="mt-4 w-full">
-        {#each metaData.tags as tag}
-          <ToggleGroupItem value={tag} class="{selectedTags.includes(tag) ? 'selected' : ''} px-2 py-1 m-1 border rounded">
-            {tag}
-          </ToggleGroupItem>
-        {/each}
-      </ToggleGroup>
-      <ToggleGroup type="multiple" bind:value={selectedMatchingTags} class="mt-4 w-full border-teal-500">
-        {#each metaData.matchingTags as tag}
-          <ToggleGroupItem value={tag} class="{selectedMatchingTags.includes(tag) ? 'selected' : ''} px-2 py-1 m-1 border rounded font-extrabold">
-            {tag}
-          </ToggleGroupItem>
-        {/each}
-      </ToggleGroup>
-      <Input id="description" bind:value={metaData.description} class="mt-4 w-full" contenteditable="true" />
+        <Input id="title" bind:value={metaData.title} class="flex-grow" contenteditable="true" />
+
+
+        <Input id="description" bind:value={metaData.description} class="flex-grow" contenteditable="true" />
+
     </Card.Content>
-    <Card.Footer class="flex justify-end mt-4">
-      <Button variant="default" class="mr-2" on:click={() => {} /*writeData(metaData.path, metaData.title, metaData.description, metaData.tags);*/}>
-        Write
-      </Button>
-      <Button variant="secondary" class="mr-2" on:click={() => {} /*filterTags(metaData.description, metaData.tags);*/}>
-        Assign tags from samples
-      </Button>
-      <Button variant="ghost">
-        Discard
-      </Button>
+    <Card.Footer class="flex-col justify-center mt-4">
+        <ToggleGroup type="multiple" bind:value={selectedTags} class="w-full">
+          {#each metaData.tags as tag}
+            <ToggleGroupItem value={tag} class="{selectedTags.includes(tag) ? 'selected' : ''} px-2 py-1 m-1 border rounded">
+              {tag}
+            </ToggleGroupItem>
+          {/each}
+        </ToggleGroup>
+
+        <ToggleGroup type="multiple" bind:value={selectedMatchingTags} class="mt-4 w-full border-teal-500">
+          {#each metaData.matchingTags as tag}
+            <ToggleGroupItem value={tag} class="{selectedMatchingTags.includes(tag) ? 'selected' : ''} px-2 py-1 m-1 border rounded font-extrabold">
+              {tag}
+            </ToggleGroupItem>
+            {/each}
+          </ToggleGroup>
     </Card.Footer>
   </Card.Root>

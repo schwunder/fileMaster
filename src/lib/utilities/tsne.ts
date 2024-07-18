@@ -117,6 +117,6 @@ export const runTsneVisualization = async (): Promise<number[][]> => {
 	const directory = IMAGE_DIRECTORY;
 	const imageTensors = await processImages(directory, maxImages);
 	const imageData = imageTensors.arraySync();
-	const flattenedData = imageData.map((img) => img.flat(2)); // Flatten the 3D array to 2D
+	const flattenedData = imageData.map((img: number[][][]) => img.flat(2)); // Flatten the 3D array to 2D
 	return initializeTsne(flattenedData);
 };

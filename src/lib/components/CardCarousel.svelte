@@ -24,7 +24,8 @@
       matchingTags: string[];
     }> = [];
     export let folderPath: string;
-  
+    export let handleDeleteMeta: (id: string) => Promise<void>;
+    export let handleUpdateMeta: (id: string, imgPath: string) => Promise<void>;
     let api: CarouselAPI;
     let count = 0;
     let current = tweened(0, { duration: 400, easing: cubicOut });
@@ -104,7 +105,12 @@
                        style="opacity: {1 - Math.abs($current - (i + 1)) * 0.5}"
                        on:click={(e) => setActiveImage(metaData.path, e)}>
           <div class:is-prev={i === $current - 2} class:is-next={i === $current}>
-            <FileCard {metaData} onFileClick={setActiveImage} />
+            <FileCard 
+            {metaData} 
+            onFileClick={setActiveImage} 
+            handleDeleteMeta={handleDeleteMeta}
+            handleUpdateMeta={handleUpdateMeta}
+            />
           </div>
         </Carousel.Item>
       {/each}
