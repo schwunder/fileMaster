@@ -14,13 +14,13 @@
       title: string;
       description: string;
       tags: string[];
-      matchingTags: string[];
+      matching: string[];
     };
     export let onFileClick: (fileUrl: string, event: MouseEvent) => void = () => {};
     export let handleDeleteMeta: (id: string) => Promise<void>;
     export let handleUpdateMeta: (id: string, imgPath: string) => Promise<void>;
     let selectedTags: string[] = [];
-    let selectedMatchingTags: string[] = [];
+    let selectedMatching: string[] = [];
     let isChecked: boolean = false;
     const sampleTags = [
     "screenshot",
@@ -70,9 +70,9 @@
           {/each}
         </ToggleGroup>
 
-        <ToggleGroup type="multiple" bind:value={selectedMatchingTags} class="mt-4 w-full border-teal-500">
-          {#each metaData.matchingTags as tag}
-            <ToggleGroupItem value={tag} class="{selectedMatchingTags.includes(tag) ? 'selected' : ''} px-2 py-1 m-1 border rounded font-extrabold">
+        <ToggleGroup type="multiple" bind:value={selectedMatching} class="mt-4 w-full border-teal-500">
+          {#each metaData.matching as tag}
+            <ToggleGroupItem value={tag} class="{selectedMatching.includes(tag) ? 'selected' : ''} px-2 py-1 m-1 border rounded font-extrabold">
               {tag}
             </ToggleGroupItem>
             {/each}

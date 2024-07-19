@@ -21,7 +21,7 @@
       title: string;
       description: string;
       tags: string[];
-      matchingTags: string[];
+      matching: string[];
     }> = [];
     export let folderPath: string;
     export let handleDeleteMeta: (id: string) => Promise<void>;

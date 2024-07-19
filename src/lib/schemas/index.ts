@@ -6,8 +6,14 @@ export const imageMetaSchema = z.object({
 	title: z.string(),
 	description: z.string(),
 	tags: z.array(z.string()),
-	matchingTags: z.array(z.string()),
+	matching: z.array(z.string()),
 	embedding: z.array(z.number())
 });
 
 export type imageMeta = z.infer<typeof imageMetaSchema>;
+
+export const formSchema = z.object({
+	folderPath: z.string().min(2).max(50)
+});
+
+export type FormSchema = z.infer<typeof formSchema>;

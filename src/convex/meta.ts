@@ -21,17 +21,17 @@ export const addMeta = mutation({
 		title: v.string(),
 		description: v.string(),
 		tags: v.array(v.string()),
-		matchingTags: v.array(v.string()),
+		matching: v.array(v.string()), // Changed from matchingTags to matching
 		embedding: v.array(v.number())
 	},
-	handler: async (ctx, { path, type, title, description, tags, matchingTags, embedding }) => {
+	handler: async (ctx, { path, type, title, description, tags, matching, embedding }) => {
 		const newTaskId = await ctx.db.insert('meta', {
 			path,
 			type,
 			title,
 			description,
 			tags,
-			matchingTags,
+			matching, // Changed from matchingTags to matching
 			embedding
 		});
 		return newTaskId;
@@ -45,7 +45,7 @@ export const updateMeta = mutation({
 		title: v.optional(v.string()),
 		description: v.optional(v.string()),
 		tags: v.optional(v.array(v.string())),
-		matchingTags: v.optional(v.array(v.string())),
+		matching: v.optional(v.array(v.string())),
 		embedding: v.optional(v.array(v.number()))
 	},
 	handler: async (ctx, args) => {
@@ -60,3 +60,46 @@ export const deleteMeta = mutation({
 		await ctx.db.delete(args.id);
 	}
 });
+
+?
+/*
+export const fetchResults = internalQuery({
+	args: { ids: v.array(v.id('meta')) },
+	handler: async (ctx, args) => {
+		const results = [];
+		for (const id of args.ids) {
+			const doc = await ctx.db.get(id);
+			if (doc === null) {
+				continue;
+			}
+			results.push(doc);
+		}
+		return results;
+	}
+});
+
+export const similarTags = action({
+	args: {
+		descriptionEmbedding: v.array(v.number())
+	},
+	handler: async (ctx, args) => {
+		// 1. Generate an embedding from your favorite third party API
+		const embedding = args.descriptionEmbedding;
+
+		// 2. Search for similar items using vector search
+		const results = await ctx.vectorSearch('meta', 'by_embedding', {
+			vector: embedding,
+			limit: 16,
+			filter: (q) => q.eq('type', 'art') // Assuming you want to filter by type "art"
+		});
+
+		// 3. Fetch the results
+		const items = await ctx.runQuery(fetchResults, {
+			ids: results.map((result) => result._id)
+		});
+
+		return items;
+	}
+});
+
+*/

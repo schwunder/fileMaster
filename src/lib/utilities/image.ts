@@ -92,7 +92,7 @@ const getMetadata = async (
 	tags: string[];
 	title: string;
 	description: string;
-	matchingTags: string[];
+	matching: string[];
 }> => {
 	try {
 		const sampleList = sampleTags.join(', ');
@@ -101,7 +101,7 @@ const getMetadata = async (
 				tags: z.array(z.string()),
 				title: z.string(),
 				description: z.string(),
-				matchingTags: z.array(z.string())
+				matching: z.array(z.string())
 			}),
 			model: createOpenAI({ apiKey: OPENAI_API_KEY })('gpt-4o'),
 			prompt: `${comment}---- 
@@ -111,7 +111,7 @@ const getMetadata = async (
 		})) as {
 			object: {
 				description: string;
-				matchingTags: string[];
+				matching: string[];
 				tags: string[];
 				title: string;
 			};
@@ -194,15 +194,12 @@ export async function processImage(imgPath: string, sampleTags: string[]): Promi
 			`What's in this image? Be concise and use under ${maxTextToEmbedLength} tokens`
 		);
 		const embedding = await fetchEmbedding(imgDescription);
-		const { tags, title, description, matchingTags } = await getMetadata(
-			imgDescription,
-			sampleTags
-		);
+		const { tags, title, description, matching } = await getMetadata(imgDescription, sampleTags);
 
 		const imageMeta: imageMeta = {
 			path: imgPath,
 			tags,
-			matchingTags,
+			matching,
 			title,
 			description,
 			embedding,

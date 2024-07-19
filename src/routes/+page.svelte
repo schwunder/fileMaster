@@ -7,6 +7,8 @@
     import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
     import { imageMetaSchema } from '$lib/schemas';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
+  import FolderForm from "$lib/components/FolderForm.svelte";
+  export let data: PageData;
 
     const client = useConvexClient()
     const meta = useQuery(api.meta.getAll, {}) // Destructure data, isLoading, and error from useQuery
@@ -39,12 +41,10 @@
               throw new Error('Failed to scan directory');
           }
           const data = await response.json();
-          
-          for (const filePath of data.files) {
-              //await client.mutation(api.meta.addMeta, { path: filePath, type: "image" });
-          }
-          console.log("Images added successfully");
-      } catch (error) {
+          console.log("data:", data);
+         
+          processImageBatch(data.files);
+                } catch (error) {
           console.error("Error scanning directory:", error);
       }
   }
@@ -68,7 +68,7 @@
                     title: parsedMeta.title,
                     description: parsedMeta.description,
                     tags: parsedMeta.tags,
-                    matchingTags: parsedMeta.matchingTags,
+                    matching: parsedMeta.matching,
                     embedding: parsedMeta.embedding,
                 });
             }
@@ -87,9 +87,17 @@
       }
   }
 
-async function handleAddFolder(): Promise<void> {
+  async function handleAddFolder(folderPath: string): Promise<void> {
+    console.log("folderPath:", folderPath)
+    const absoluteDirectoryPath = folderPath;
     try {
-        const response = await fetch('/api/add-folder');
+        const response = await fetch('/api/copy-to-db', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ absoluteDirectoryPath })
+        });
         if (!response.ok) {
             throw new Error('Failed to add folder');
         }
@@ -100,16 +108,36 @@ async function handleAddFolder(): Promise<void> {
     }
 }
 
-async function handleProcessImagesBatch(): Promise<void> {
-    try {
-        const response = await fetch('/api/process-images-batch');
+async function processImageBatch(imgPaths: string[]): Promise<void> {
+  try {
+        const response = await fetch('/api/process-image-batch', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json' // Set content type to plain text
+          },
+          body: JSON.stringify({paths: imgPaths, sampleTags: sampleTags}) // Send the image path as plain text
+        });
         if (!response.ok) {
-            throw new Error('Failed to process images batch');
+            throw new Error('Failed to process image');
         }
-        const data = await response.json();
-        console.log("Images batch processed successfully:", data);
+        const dataWithExtra = await response.json();
+        console.log("Images processed successfully:", dataWithExtra);
+        const data = dataWithExtra.data;
+
+for (const meta of data) {
+        // Ensure the updateMeta mutation is called with the correct fields
+        await client.mutation(api.meta.addMeta, {
+                    path: meta.path,
+                    type: meta.type,
+                    title: meta.title,
+                    description: meta.description,
+                    tags: meta.tags,
+                    matching: meta.matching,
+                    embedding: meta.embedding,
+                });
+            }
     } catch (error) {
-        console.error("Error processing images batch:", error);
+        console.error("Error processing image:", error);
     }
 }
 
@@ -149,34 +177,12 @@ async function handleUpdateMeta(id: string, imgPath: string): Promise<void> {
             title: data.title,
             description: data.description,
             tags: data.tags,
-            matchingTags: data.matchingTags,
+            matching: data.matching,
             embedding: data.embedding,
             type: data.type
         });
     } catch (error) {
         console.error("Error processing image:", error);
-    }
-}
-
-async function handleUpdateImageDescription(id: string, imgPath: string): Promise<void> {
-  console.log("imgPath:", imgPath);
-    try {
-        const response = await fetch('/api/update-image-description', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain' // Set content type to plain text
-          },
-          body: imgPath // Send the image path as plain text
-        });
-        if (!response.ok) {
-            throw new Error('Failed to update image description');
-        }
-        const data = await response.json();
-        console.log("Image description updated successfully:", data);
-        const description = data.description;
-        await client.mutation(api.meta.updateMeta, {id: id as Id<"meta">, description});
-    } catch (error) {
-        console.error("Error updating image description:", error); // Corrected error handling
     }
 }
 
@@ -189,7 +195,7 @@ async function handleUpdateImageDescription(id: string, imgPath: string): Promis
   <header class="bg-blue-500 text-white p-4 flex justify-between items-center">
     <h1 class="text-2xl font-bold">Images Gallery with Tags and Description and Suggested Title</h1>
     <Button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={handleScanImageDirectory}>
-      Scan Image Directory
+      Process Image Directory
     </Button>
     <Button class="bg-white text-blue-500 px-4 py-2 rounded" on:click={handleScanJsonDirectory}>
       Scan Json Directory
@@ -209,7 +215,7 @@ async function handleUpdateImageDescription(id: string, imgPath: string): Promis
        handleUpdateMeta={handleUpdateMeta}
         />
     {:else}
-      <p>No images found.</p>
+      <FolderForm data={data.form} {handleAddFolder} />
     {/if}
 
     <ToggleGroup.Root size="lg" type="multiple" bind:value={selectedTags}>
