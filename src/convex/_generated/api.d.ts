@@ -15,6 +15,7 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as meta from "../meta.js";
+import type * as search from "../search.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -26,6 +27,7 @@ import type * as meta from "../meta.js";
  */
 declare const fullApi: ApiFromModules<{
   meta: typeof meta;
+  search: typeof search;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

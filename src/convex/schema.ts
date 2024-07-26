@@ -12,7 +12,6 @@ export default defineSchema({
 		embedding: v.array(v.float64())
 	}).vectorIndex('by_embedding', {
 		vectorField: 'embedding',
-		dimensions: 1536,
-		filterFields: ['type', 'path', 'title', 'description', 'tags', 'matching']
+		dimensions: 1536
 	})
 });

@@ -2,9 +2,24 @@ import { mutation, query } from './_generated/server';
 
 import { v } from 'convex/values';
 
-export const get = query(async (ctx) => {
-	console.log('Write and test your query function here!');
-	return await ctx.db.query('meta').take(10);
+export const getById = query({
+	args: { id: v.id('meta') },
+	handler: async (ctx, args) => {
+		const meta = await ctx.db.get(args.id);
+		return meta;
+	}
+});
+
+export const getByIdArray = query({
+	args: { ids: v.array(v.id('meta')) },
+	handler: async (ctx, args) => {
+		const metas = [];
+		for (const id of args.ids) {
+			metas.push(ctx.db.get(id));
+		}
+		return Promise.all(metas);
+	}
+	// await ctx.db.query('meta').withIndex('by_id', ids).collect();
 });
 
 export const getAll = query(async ({ db }) => {
@@ -37,6 +52,7 @@ export const addMeta = mutation({
 		return newTaskId;
 	}
 });
+
 export const updateMeta = mutation({
 	args: {
 		id: v.id('meta'),
@@ -54,51 +70,10 @@ export const updateMeta = mutation({
 		await ctx.db.patch(id, updateFields);
 	}
 });
+
 export const deleteMeta = mutation({
 	args: { id: v.id('meta') },
 	handler: async (ctx, args) => {
 		await ctx.db.delete(args.id);
 	}
 });
-
-/*
-export const fetchResults = internalQuery({
-	args: { ids: v.array(v.id('meta')) },
-	handler: async (ctx, args) => {
-		const results = [];
-		for (const id of args.ids) {
-			const doc = await ctx.db.get(id);
-			if (doc === null) {
-				continue;
-			}
-			results.push(doc);
-		}
-		return results;
-	}
-});
-
-export const similarTags = action({
-	args: {
-		descriptionEmbedding: v.array(v.number())
-	},
-	handler: async (ctx, args) => {
-		// 1. Generate an embedding from your favorite third party API
-		const embedding = args.descriptionEmbedding;
-
-		// 2. Search for similar items using vector search
-		const results = await ctx.vectorSearch('meta', 'by_embedding', {
-			vector: embedding,
-			limit: 16,
-			filter: (q) => q.eq('type', 'art') // Assuming you want to filter by type "art"
-		});
-
-		// 3. Fetch the results
-		const items = await ctx.runQuery(fetchResults, {
-			ids: results.map((result) => result._id)
-		});
-
-		return items;
-	}
-});
-
-*/
