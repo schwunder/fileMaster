@@ -11,21 +11,26 @@
     import { onMount } from 'svelte';
     import FileCard from '$lib/components/FileCard.svelte';         
     import { AspectRatio } from "$lib/components/ui/aspect-ratio";
-    
+    import type { Id } from '$convex/_generated/dataModel';
+
     type EmblaPluginType = AutoplayType | AutoHeightType | ClassNamesType | FadeType;
 
     export let sortedMetaDataArray: Array<{
-      _id: string;
-      _creationTime: string;
+      _id: Id<"meta">;
+      _creationTime: number;
       path: string;
       title: string;
+      type: string;
       description: string;
       tags: string[];
       matching: string[];
+      embedding: number[];
     }> = [];
     export let folderPath: string;
     export let handleDeleteMeta: (id: string) => Promise<void>;
     export let handleUpdateMeta: (id: string, imgPath: string) => Promise<void>;
+    export let handleSimilar: (id: string) => Promise<void>;
+    export let similarImageId: string | null = null;
     let api: CarouselAPI;
     let count = 0;
     let current = tweened(0, { duration: 400, easing: cubicOut });
@@ -43,6 +48,24 @@
       }),
       Fade()
     ];
+
+    function onSimilarRequest(event: CustomEvent<string>) {
+      handleSimilar(event.detail);
+    }
+
+    function highlightSimilarImage() {
+      if (similarImageId && api) {
+        const index = sortedMetaDataArray.findIndex(meta => meta._id === similarImageId);
+        if (index !== -1) {
+          api.scrollTo(index);
+          // You might want to add a visual indicator here
+        }
+      }
+    }
+
+    $: if (similarImageId) {
+      highlightSimilarImage();
+    }
   
     $: if (api) {
       count = api.scrollSnapList().length;
@@ -102,14 +125,17 @@
                       on:dragend={(e) => isCarouselActive && current.set($current + (e.detail as any).velocityX * 0.05)}>
       {#each sortedMetaDataArray as metaData, i}
         <Carousel.Item class="carousel-item pl-2 md:pl-4"
-                       style="opacity: {1 - Math.abs($current - (i + 1)) * 0.5}"
-                       on:click={(e) => setActiveImage(metaData.path, e)}>
+                       style="opacity: {1 - Math.abs($current - (i + 1)) * 0.5}; 
+                              {metaData._id === similarImageId ? 'border: 2px solid red;' : ''}"
+                       on:click={(e) => setActiveImage(metaData.path, e)}
+                       on:similarRequest={onSimilarRequest}>
           <div class:is-prev={i === $current - 2} class:is-next={i === $current}>
             <FileCard 
             {metaData} 
             onFileClick={setActiveImage} 
-            handleDeleteMeta={handleDeleteMeta}
-            handleUpdateMeta={handleUpdateMeta}
+            {handleDeleteMeta}
+            {handleUpdateMeta}
+            onSimilarRequest={handleSimilar}
             />
           </div>
         </Carousel.Item>

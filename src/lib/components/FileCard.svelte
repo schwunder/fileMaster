@@ -6,19 +6,23 @@
     import { ToggleGroup, ToggleGroupItem } from "$lib/components/ui/toggle-group";
     import { Checkbox } from "$lib/components/ui/checkbox";
     import IconButton from "$lib/components/IconButton.svelte";
-  
+    import type { Id } from '$convex/_generated/dataModel';
+
     export let metaData: {
-      _id: string;
-      _creationTime: string;
+      _id: Id<"meta">;
+      _creationTime: number;
       path: string;
       title: string;
+      type: string;
       description: string;
       tags: string[];
       matching: string[];
+      embedding: number[];
     };
     export let onFileClick: (fileUrl: string, event: MouseEvent) => void = () => {};
     export let handleDeleteMeta: (id: string) => Promise<void>;
     export let handleUpdateMeta: (id: string, imgPath: string) => Promise<void>;
+    export let onSimilarRequest: (id: Id<"meta">) => void;
     let selectedTags: string[] = [];
     let selectedMatching: string[] = [];
     let isChecked: boolean = false;
@@ -36,13 +40,21 @@
     "male",
     "female",
   ];
-// patch db on assign tags from samples
+
+    function requestSimilar() {
+        onSimilarRequest(metaData._id);
+    }
+
+    // patch db on assign tags from samples
   </script>
 
   <Card.Root class="max-w-[450px] mx-auto p-4 bg-white rounded-md shadow-md">
     <Card.Header class="flex-row justify-between items-center">
       <Button variant="default" on:click={() => {} /*writeData(metaData.path, metaData.title, metaData.description, metaData.tags);*/}>
         Write
+      </Button>
+      <Button variant="default" on:click={requestSimilar}>
+        Similar
       </Button>
       <IconButton title="Regenerate meta" onClick={() => handleUpdateMeta(metaData._id, metaData.path)} />
       <Checkbox class="ml-2" bind:checked={isChecked} />

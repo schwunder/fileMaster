@@ -34,3 +34,35 @@ export const similarEmbeddings = action({
 		return meta;
 	}
 });
+
+export const fetchMetaById = internalQuery({
+	args: { id: v.id('meta') },
+	handler: async (ctx, args) => {
+		return await ctx.db.get(args.id);
+	}
+});
+
+export const mostSimilarMeta = action({
+	args: {
+		id: v.id('meta')
+	},
+	handler: async (ctx, args): Promise<Doc<'meta'> | null> => {
+		const sourceMeta = await ctx.runQuery(internal.search.fetchMetaById, { id: args.id });
+
+		if (!sourceMeta || !sourceMeta.embedding) {
+			return null;
+		}
+
+		const results = await ctx.vectorSearch('meta', 'by_embedding', {
+			vector: sourceMeta.embedding,
+			limit: 2
+		});
+
+		const meta = await ctx.runQuery(internal.search.fetchResults, {
+			ids: results.map((result) => result._id)
+		});
+
+		// Return the second most similar (first is the source itself)
+		return meta[1] || null;
+	}
+});

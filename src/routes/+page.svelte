@@ -186,6 +186,14 @@ async function handleUpdateMeta(id: string, imgPath: string): Promise<void> {
     }
 }
 
+let similarImageId: Id<"meta"> | null = null;
+
+async function handleSimilar(id: string) {
+    console.log("Handling similar for id:", id);
+    const similarMeta = await client.action(api.search.mostSimilarMeta, { id: id as Id<"meta"> });
+    similarImageId = similarMeta?._id ?? null;
+}
+
   </script>
   <svelte:head>
     <title>Home</title>
@@ -213,6 +221,8 @@ async function handleUpdateMeta(id: string, imgPath: string): Promise<void> {
         folderPath="db/media"
         handleDeleteMeta={handleDeleteMeta}
        handleUpdateMeta={handleUpdateMeta}
+        handleSimilar={handleSimilar}
+        similarImageId={similarImageId}
         />
     {:else}
       <FolderForm data={data.form} {handleAddFolder} />
