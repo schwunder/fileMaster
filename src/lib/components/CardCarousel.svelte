@@ -28,9 +28,11 @@
     }> = [];
     export let folderPath: string;
     export let handleDeleteMeta: (id: string) => Promise<void>;
-    export let handleUpdateMeta: (id: string, imgPath: string) => Promise<void>;
-    export let handleSimilar: (id: string) => Promise<void>;
-    export let similarImageId: string | null = null;
+    export let handleUpdateMeta: (id: Id<"meta">, imgPath: string) => Promise<void>;
+      export let handleSimilar: (id: Id<"meta">) => Promise<void>;
+  export let similarImageId: Id<"meta"> | null = null;
+
+
     let api: CarouselAPI;
     let count = 0;
     let current = tweened(0, { duration: 400, easing: cubicOut });
@@ -49,9 +51,9 @@
       Fade()
     ];
 
-    function onSimilarRequest(event: CustomEvent<string>) {
-      handleSimilar(event.detail);
-    }
+    function onSimilarRequest(event: CustomEvent<Id<"meta">>) {
+    handleSimilar(event.detail);
+  }
 
     function highlightSimilarImage() {
       if (similarImageId && api) {
@@ -74,6 +76,13 @@
         current.set(api.selectedScrollSnap() + 1);
       });
     }
+
+    $: if (similarImageId && api) {
+    const index = sortedMetaDataArray.findIndex(meta => meta._id === similarImageId);
+    if (index !== -1) {
+      api.scrollTo(index);
+    }
+  }
   
     onMount(() => {
       if (api) {
@@ -125,17 +134,17 @@
                       on:dragend={(e) => isCarouselActive && current.set($current + (e.detail as any).velocityX * 0.05)}>
       {#each sortedMetaDataArray as metaData, i}
         <Carousel.Item class="carousel-item pl-2 md:pl-4"
-                       style="opacity: {1 - Math.abs($current - (i + 1)) * 0.5}; 
-                              {metaData._id === similarImageId ? 'border: 2px solid red;' : ''}"
+                       style="opacity: {1 - Math.abs($current - (i + 1)) * 0.5}"
+                      
                        on:click={(e) => setActiveImage(metaData.path, e)}
                        on:similarRequest={onSimilarRequest}>
           <div class:is-prev={i === $current - 2} class:is-next={i === $current}>
             <FileCard 
             {metaData} 
-            onFileClick={setActiveImage} 
+            {setActiveImage} 
             {handleDeleteMeta}
             {handleUpdateMeta}
-            onSimilarRequest={handleSimilar}
+            {handleSimilar}
             />
           </div>
         </Carousel.Item>

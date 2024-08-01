@@ -19,10 +19,10 @@
       matching: string[];
       embedding: number[];
     };
-    export let onFileClick: (fileUrl: string, event: MouseEvent) => void = () => {};
-    export let handleDeleteMeta: (id: string) => Promise<void>;
-    export let handleUpdateMeta: (id: string, imgPath: string) => Promise<void>;
-    export let onSimilarRequest: (id: Id<"meta">) => void;
+    export let setActiveImage: (fileUrl: string, event: MouseEvent) => void = () => {};
+    export let handleDeleteMeta: (id: Id<"meta">) => Promise<void>;
+    export let handleUpdateMeta: (id: Id<"meta">, imgPath: string) => Promise<void>;
+    export let handleSimilar: (id: Id<"meta">) => void;
     let selectedTags: string[] = [];
     let selectedMatching: string[] = [];
     let isChecked: boolean = false;
@@ -42,7 +42,7 @@
   ];
 
     function requestSimilar() {
-        onSimilarRequest(metaData._id);
+      handleSimilar(metaData._id);
     }
 
     // patch db on assign tags from samples
@@ -63,7 +63,7 @@
     </Card.Header>
     <Card.Content>
       <AspectRatio ratio={16 / 9} class="bg-muted w-full">
-        <Button on:click={(e) => { onFileClick(metaData.path, e); }} variant="ghost" class="w-full h-full">
+        <Button on:click={(e) => { setActiveImage(metaData.path, e); }} variant="ghost" class="w-full h-full">
           <img src={metaData.path} alt={""} class="rounded-md object-contain w-full h-full" />
         </Button>
       </AspectRatio>

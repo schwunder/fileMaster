@@ -9,6 +9,14 @@
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
   import FolderForm from "$lib/components/FolderForm.svelte";
   export let data: PageData;
+  import { writable } from 'svelte/store';
+
+  const similarImageId = writable<Id<"meta"> | null>(null);
+
+  async function handleSimilar(id: Id<"meta">) {
+    const similarMeta = await client.action(api.search.mostSimilarMeta, { id });
+    similarImageId.set(similarMeta?._id ?? null);
+  }
 
     const client = useConvexClient()
     const meta = useQuery(api.meta.getAll, {}) // Destructure data, isLoading, and error from useQuery
@@ -186,14 +194,6 @@ async function handleUpdateMeta(id: string, imgPath: string): Promise<void> {
     }
 }
 
-let similarImageId: Id<"meta"> | null = null;
-
-async function handleSimilar(id: string) {
-    console.log("Handling similar for id:", id);
-    const similarMeta = await client.action(api.search.mostSimilarMeta, { id: id as Id<"meta"> });
-    similarImageId = similarMeta?._id ?? null;
-}
-
   </script>
   <svelte:head>
     <title>Home</title>
@@ -219,10 +219,10 @@ async function handleSimilar(id: string) {
         <CardCarousel 
         sortedMetaDataArray={meta.data}
         folderPath="db/media"
-        handleDeleteMeta={handleDeleteMeta}
-       handleUpdateMeta={handleUpdateMeta}
-        handleSimilar={handleSimilar}
-        similarImageId={similarImageId}
+        {handleDeleteMeta}
+        {handleUpdateMeta}
+        {handleSimilar}
+        similarImageId={$similarImageId}
         />
     {:else}
       <FolderForm data={data.form} {handleAddFolder} />
