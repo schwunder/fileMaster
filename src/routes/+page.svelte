@@ -5,7 +5,7 @@
 	import type { Id } from '$convex/_generated/dataModel';
 	import { Button } from '$lib/components/ui/button';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group/index.js';
-	import { imageMetaSchema } from '$lib/schemas';
+	import { imageMetaSchema, type imageMeta } from '$lib/schemas';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import FolderForm from '$lib/components/FolderForm.svelte';
 
@@ -195,6 +195,18 @@
 			console.error('Error running t-SNE visualization:', error);
 		}
 	}
+
+	function getUniqueTags(metaData: imageMeta[]): [string, number][] {
+		const tagCounts: Record<string, number> = {};
+		metaData.forEach((meta: imageMeta) => {
+			meta.matching.forEach((tag: string) => {
+				tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+			});
+		});
+		return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+	}
+
+	const uniqueTags = $derived(meta.data ? getUniqueTags(meta.data) : []);
 </script>
 
 <svelte:head>
@@ -218,14 +230,21 @@
 	{:else if meta.error}
 		<p>Error loading images: {meta.error}</p>
 	{:else if meta.data && meta.data.length > 0}
-		<CardCarousel
-			sortedMetaDataArray={meta.data}
-			folderPath="db/media"
-			{handleDeleteMeta}
-			{handleUpdateMeta}
-			{handleSimilarMeta}
-			{similarImageId}
-		/>
+		<div class="grid grid-cols-1 gap-4">
+			{#each uniqueTags as [tag, count]}
+				<div>
+					<h2 class="mb-2 text-xl font-bold">{tag} ({count})</h2>
+					<CardCarousel
+						sortedMetaDataArray={meta.data.filter((m) => m.matching.includes(tag))}
+						folderPath="db/media"
+						{handleDeleteMeta}
+						{handleUpdateMeta}
+						{handleSimilarMeta}
+						{similarImageId}
+					/>
+				</div>
+			{/each}
+		</div>
 	{:else}
 		<FolderForm data={data.form} {handleAddFolder} />
 	{/if}
