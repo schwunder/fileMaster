@@ -8,6 +8,7 @@
 	import { imageMetaSchema, type imageMeta } from '$lib/schemas';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import FolderForm from '$lib/components/FolderForm.svelte';
+	import Tsne from '$lib/components/Tsne.svelte';
 
 	const sampleTags: string[] = [
 		'screenshot',
@@ -231,6 +232,10 @@
 		<p>Error loading images: {meta.error}</p>
 	{:else if meta.data && meta.data.length > 0}
 		<div class="grid grid-cols-1 gap-4">
+			<div>
+				<h2>Tsne</h2>
+				<Tsne metaData={meta.data} folderPath=""/>
+			</div>
 			{#each uniqueTags as [tag, count]}
 				<div>
 					<h2 class="mb-2 text-xl font-bold">{tag} ({count})</h2>
@@ -249,7 +254,7 @@
 		<FolderForm data={data.form} {handleAddFolder} />
 	{/if}
 
-	<ToggleGroup.Root size="lg" type="multiple" bind:value={selectedTags}>
+	<ToggleGroup.Root size="lg" type="multiple" bind:value={selectedTags} style="padding-top: 20px;">
 		{#each sampleTags as tag}
 			<ToggleGroup.Item value={tag} aria-label="Toggle {tag}">
 				<div

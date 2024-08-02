@@ -71,6 +71,7 @@
 		"svelte-radix": "^1.1.0",
 		"tailwind-merge": "^2.4.0",
 		"tailwind-variants": "^0.2.1",
-		"tfjs-node": "github:tensorflow/tfjs-node"
+		"tfjs-node": "github:tensorflow/tfjs-node",
+		"tsne-js": "^1.0.3"
 	}
 }
