@@ -9,6 +9,8 @@
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import FolderForm from '$lib/components/FolderForm.svelte';
 	import Tsne from '$lib/components/Tsne.svelte';
+	import ShowExistingData from '$lib/components/ShowExistingData.svelte';
+	import type { SourceMeta } from '$lib/utilities/extraction';
 
 	const sampleTags: string[] = [
 		'screenshot',
@@ -16,7 +18,7 @@
 		'document',
 		'bill',
 		'family',
-		'city',
+		 'city',
 		'vacation',
 		'landscape',
 		'pet',
@@ -32,6 +34,7 @@
 
 	let similarImageId: Id<'meta'> | null = $state(null);
 	let selectedTags: string[] = $state([...sampleTags]); // Initialize with all sample tags selected
+	let sourceMeta: SourceMeta | null = $state(null); // Correct the type definition
 
 	// Add console logs for debugging
 	console.log('isLoading:', meta.isLoading);
@@ -103,6 +106,20 @@
 			console.log('Jsons added successfully');
 		} catch (error) {
 			console.error('Error scanning directory:', error);
+		}
+	}
+
+	async function handleExtractSourceMeta(): Promise<void> {
+		try {
+			const response = await fetch('/api/extract-source-meta');
+			if (!response.ok) {
+				throw new Error('Failed to extract source metadata');
+			}
+			const data = await response.json();
+			sourceMeta = data.results as SourceMeta;
+			console.log('Source metadata extracted successfully:', sourceMeta);
+		} catch (error) {
+			console.error('Error extracting source metadata:', error);
 		}
 	}
 
@@ -232,11 +249,18 @@
 		<p>Error loading images: {meta.error}</p>
 	{:else if meta.data && meta.data.length > 0}
 		<div class="grid grid-cols-1 gap-4">
+			{#if sourceMeta}
+				<ShowExistingData {sourceMeta} />
+			{:else}
+				<Button on:click={handleExtractSourceMeta}>
+					Extract Source Meta
+				</Button>
+			{/if}
 			<div>
 				<h2>Tsne</h2>
 				<Tsne metaData={meta.data} folderPath=""/>
 			</div>
-			{#each uniqueTags as [tag, count]}
+				{#each uniqueTags as [tag, count]}
 				<div>
 					<h2 class="mb-2 text-xl font-bold">{tag} ({count})</h2>
 					<CardCarousel
