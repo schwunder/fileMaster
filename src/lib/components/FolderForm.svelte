@@ -28,6 +28,6 @@
 		</Form.Control>
 		<Form.Description>Enter a folder path (2-50 characters).</Form.Description>
 		<Form.FieldErrors />
-	</Form.Field>ßß
+	</Form.Field>
 	<Button type="submit">Add Folder</Button>
 </form>

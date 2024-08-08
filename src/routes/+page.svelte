@@ -18,7 +18,7 @@
 		'document',
 		'bill',
 		'family',
-		 'city',
+		'city',
 		'vacation',
 		'landscape',
 		'pet',
@@ -43,25 +43,34 @@
 	console.log('stale:', meta.isStale);
 
 	async function handleAddFolder(folderPath: string): Promise<void> {
-		console.log('folderPath:', folderPath);
-		const absoluteDirectoryPath = folderPath;
-		try {
-			const response = await fetch('/api/copy-to-db', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ absoluteDirectoryPath })
-			});
-			if (!response.ok) {
-				throw new Error('Failed to add folder');
-			}
-			const data = await response.json();
-			console.log('Folder added successfully:', data);
-		} catch (error) {
-			console.error('Error adding folder:', error);
-		}
-	}
+    console.log('folderPath:', folderPath);
+    const absoluteDirectoryPath = folderPath;
+    try {
+        // Send a request to copy files to the db/media folder
+        const response = await fetch('/api/copy-to-db', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ absoluteDirectoryPath })
+        });
+        if (!response.ok) {
+            throw new Error('Failed to add folder');
+        }
+        const data = await response.json();
+        console.log('Folder added successfully:', data);
+
+        // Process only the newly added images
+        if (data.newFiles && data.newFiles.length > 0) {
+            await processImageBatch(data.newFiles);
+        }
+
+        // Trigger a refresh of the image data
+        await handleScanImageDirectory();
+    } catch (error) {
+        console.error('Error adding folder:', error);
+    }
+}
 
 	async function handleScanImageDirectory(): Promise<void> {
 		try {
@@ -91,16 +100,8 @@
 				console.log('Processing file:', filePath);
 				for (const meta of metadata) {
 					// Validate metadata using imageMetaSchema
-					const parsedMeta = imageMetaSchema.parse(meta);
-					await client.mutation(api.meta.addMeta, {
-						path: parsedMeta.path,
-						type: parsedMeta.type,
-						title: parsedMeta.title,
-						description: parsedMeta.description,
-						tags: parsedMeta.tags,
-						matching: parsedMeta.matching,
-						embedding: parsedMeta.embedding
-					});
+					const parsedMeta = imageMetaSchema.parse({...meta, processed: 1});
+					await client.mutation(api.meta.addMeta, parsedMeta);
 				}
 			}
 			console.log('Jsons added successfully');
@@ -132,14 +133,24 @@
 		}
 	}
 
+	async function handleDeleteAllMeta() {
+		try {
+			await client.mutation(api.meta.deleteAllMeta, {});
+			console.log("All meta entries deleted");
+			// Optionally, refresh your data here
+		} catch (error) {
+			console.error("Error deleting meta entries:", error);
+		}
+	}
+
 	async function handleUpdateMeta(id: Id<'meta'>, imgPath: string): Promise<void> {
 		try {
 			const response = await fetch('/api/update-image-meta', {
 				method: 'POST',
 				headers: {
-					'Content-Type': 'application/json' // Set content type to plain text
+					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ path: imgPath, sampleTags: sampleTags }) // Send the image path as plain text
+				body: JSON.stringify({ path: imgPath, sampleTags: sampleTags })
 			});
 			if (!response.ok) {
 				throw new Error('Failed to process image');
@@ -149,15 +160,21 @@
 			const data = dataWithExtra.data;
 
 			// Ensure the updateMeta mutation is called with the correct fields
-			await client.mutation(api.meta.updateMeta, {
-				id: id as Id<'meta'>,
-				title: data.title,
-				description: data.description,
-				tags: data.tags,
-				matching: data.matching,
-				embedding: data.embedding,
-				type: data.type
-			});
+			const metaItem = meta.data?.find(m => m._id === id);
+			if (metaItem) {
+				// Use the processed field if it exists, otherwise default to 1
+				const processed = 'processed' in metaItem ? metaItem.processed : 1;
+				await client.mutation(api.meta.updateMeta, {
+					id: id as Id<'meta'>,
+					title: data.title,
+					description: data.description,
+					tags: data.tags,
+					matching: data.matching,
+					embedding: data.embedding,
+					type: data.type,
+					processed: processed
+				});
+			}
 		} catch (error) {
 			console.error('Error processing image:', error);
 		}
@@ -169,37 +186,37 @@
 	}
 
 	async function processImageBatch(imgPaths: string[]): Promise<void> {
-		try {
-			const response = await fetch('/api/process-image-batch', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json' // Set content type to plain text
-				},
-				body: JSON.stringify({ paths: imgPaths, sampleTags: sampleTags }) // Send the image path as plain text
-			});
-			if (!response.ok) {
-				throw new Error('Failed to process image');
-			}
-			const dataWithExtra = await response.json();
-			console.log('Images processed successfully:', dataWithExtra);
-			const data = dataWithExtra.data;
+    try {
+        const response = await fetch('/api/process-image-batch', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ paths: imgPaths, sampleTags: sampleTags })
+        });
+        if (!response.ok) {
+            throw new Error('Failed to process image');
+        }
+        const dataWithExtra = await response.json();
+        console.log('Images processed successfully:', dataWithExtra);
+        const data = dataWithExtra.data;
 
-			for (const meta of data) {
-				// Ensure the updateMeta mutation is called with the correct fields
-				await client.mutation(api.meta.addMeta, {
-					path: meta.path,
-					type: meta.type,
-					title: meta.title,
-					description: meta.description,
-					tags: meta.tags,
-					matching: meta.matching,
-					embedding: meta.embedding
-				});
-			}
-		} catch (error) {
-			console.error('Error processing image:', error);
-		}
-	}
+        for (const meta of data) {
+            await client.mutation(api.meta.addMeta, {
+                path: meta.path,
+                type: meta.type,
+                title: meta.title,
+                description: meta.description,
+                tags: meta.tags,
+                matching: meta.matching,
+                embedding: meta.embedding,
+                processed: meta.processed
+            });
+        }
+    } catch (error) {
+        console.error('Error processing image:', error);
+    }
+}
 
 	async function handleRunTsneVisualization(): Promise<void> {
 		try {
@@ -214,15 +231,17 @@
 		}
 	}
 
+
+
 	function getUniqueTags(metaData: imageMeta[]): [string, number][] {
-		const tagCounts: Record<string, number> = {};
-		metaData.forEach((meta: imageMeta) => {
-			meta.matching.forEach((tag: string) => {
-				tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-			});
-		});
-		return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
-	}
+    const tagCounts: Record<string, number> = {};
+    metaData.forEach((meta: imageMeta) => {
+        meta.matching.forEach((tag: string) => {
+            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+    });
+    return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+}
 
 	const uniqueTags = $derived(meta.data ? getUniqueTags(meta.data) : []);
 </script>
@@ -240,6 +259,7 @@
 	<Button class="rounded bg-white px-4 py-2 text-blue-500" on:click={handleScanJsonDirectory}>
 		Scan Json Directory
 	</Button>
+	<Button class="rounded bg-white px-4 py-2 text-blue-500" on:click={handleDeleteAllMeta}>Delete All Meta Entries</Button>
 </header>
 
 <main class="p-4">
@@ -258,7 +278,19 @@
 			{/if}
 			<div>
 				<h2>Tsne</h2>
-				<Tsne metaData={meta.data} folderPath=""/>
+				<Tsne 
+					metaData={meta.data ? meta.data.map(m => ({
+						path: m.path,
+						title: m.title,
+						type: m.type,
+						description: m.description,
+						tags: m.tags,
+						matching: m.matching,
+						embedding: m.embedding,
+						processed: m.processed ?? 1 // Use the existing processed value or default to 1
+					})) : []} 
+					folderPath=""
+				/>
 			</div>
 				{#each uniqueTags as [tag, count]}
 				<div>

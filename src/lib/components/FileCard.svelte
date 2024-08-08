@@ -20,6 +20,7 @@
 		tags: string[];
 		matching: string[];
 		embedding: number[];
+		processed: boolean; // Added processed field
 	};
 
 	export let setActiveImage: (fileUrl: string, event: MouseEvent) => void = () => {};
