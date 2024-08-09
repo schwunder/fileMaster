@@ -3,15 +3,15 @@ import { listFilesImages } from '$lib/utilities/fileIO';
 import { join } from 'path';
 
 export async function GET() {
-	const relativePath = 'db/media';
-	const projectRoot = process.cwd();
-	const directoryPath = join(projectRoot, relativePath);
+  const relativePath = 'db/media';
+  const projectRoot = process.cwd();
+  const directoryPath = join(projectRoot, relativePath);
 
-	try {
-		const files = await listFilesImages(directoryPath);
-		return json({ files });
-	} catch (error) {
-		console.error('Error scanning directory:', error);
-		return json({ error: 'Failed to scan directory' }, { status: 500 });
-	}
+  try {
+    const files = await listFilesImages(directoryPath);
+    return json({ files });
+  } catch (error) {
+    console.error('Error scanning directory:', error);
+    return json({ error: 'Failed to scan directory' }, { status: 500 });
+  }
 }

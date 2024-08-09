@@ -29,6 +29,7 @@
 		tags: string[];
 		matching: string[];
 		embedding: number[];
+		processed: number;
 	}> = [];
 
 	export let folderPath: string;

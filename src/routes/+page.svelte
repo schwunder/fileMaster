@@ -28,7 +28,21 @@
 	];
 
 	const client = useConvexClient();
-	const meta = useQuery(api.meta.getAll, {}); // Destructure data, isLoading, and error from useQuery
+	let meta = $state(useQuery(api.meta.getAll, {}));
+
+	// Create derived values for meta properties
+	const metaData = $derived(meta.data);
+	const metaIsLoading = $derived(meta.isLoading);
+	const metaError = $derived(meta.error);
+	const metaIsStale = $derived(meta.isStale);
+
+	// Add console logs for debugging
+	$effect(() => {
+		console.log('isLoading:', metaIsLoading);
+		console.log('error:', metaError);
+		console.log('images:', metaData);
+		console.log('stale:', metaIsStale);
+	});
 
 	let { data }: { data: PageData } = $props();
 
@@ -36,41 +50,75 @@
 	let selectedTags: string[] = $state([...sampleTags]); // Initialize with all sample tags selected
 	let sourceMeta: SourceMeta | null = $state(null); // Correct the type definition
 
-	// Add console logs for debugging
-	console.log('isLoading:', meta.isLoading);
-	console.log('error:', meta.error);
-	console.log('images:', meta.data);
-	console.log('stale:', meta.isStale);
-
 	async function handleAddFolder(folderPath: string): Promise<void> {
-    console.log('folderPath:', folderPath);
-    const absoluteDirectoryPath = folderPath;
-    try {
-        // Send a request to copy files to the db/media folder
-        const response = await fetch('/api/copy-to-db', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ absoluteDirectoryPath })
-        });
-        if (!response.ok) {
-            throw new Error('Failed to add folder');
-        }
-        const data = await response.json();
-        console.log('Folder added successfully:', data);
+		console.log('folderPath:', folderPath);
+		const absoluteDirectoryPath = folderPath;
+		try {
+			const response = await fetch('/api/copy-to-db', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ absoluteDirectoryPath })
+			});
+			if (!response.ok) {
+				throw new Error('Failed to add folder');
+			}
+			const data = await response.json();
+			console.log('Folder added successfully:', data);
 
-        // Process only the newly added images
-        if (data.newFiles && data.newFiles.length > 0) {
-            await processImageBatch(data.newFiles);
-        }
+			if (data.newFiles && data.newFiles.length > 0) {
+				console.log('New files copied:', data.newFiles);
+				await processImageBatch(data.newFiles);
+			} else {
+				console.log('No new files copied');
+			}
 
-        // Trigger a refresh of the image data
-        await handleScanImageDirectory();
-    } catch (error) {
-        console.error('Error adding folder:', error);
-    }
-}
+			await client.query(api.meta.getAll, {});
+		} catch (error) {
+			console.error('Error adding folder:', error);
+		}
+	}
+
+	async function processImageBatch(imgPaths: string[]): Promise<void> {
+		try {
+			console.log('Processing image batch:', imgPaths);
+
+			const response = await fetch('/api/process-image-batch', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ paths: imgPaths, sampleTags })
+			});
+			if (!response.ok) {
+				throw new Error('Failed to process images');
+			}
+			const dataWithExtra = await response.json();
+			console.log('Images processed successfully:', dataWithExtra);
+			const data = dataWithExtra.data;
+
+			for (const meta of data) {
+				try {
+					await client.mutation(api.meta.addMeta, {
+						path: meta.path,
+						type: meta.type,
+						title: meta.title,
+						description: meta.description,
+						tags: meta.tags,
+						matching: meta.matching,
+						embedding: meta.embedding,
+						processed: meta.processed
+					});
+					console.log(`Metadata added for ${meta.path}`);
+				} catch (error) {
+					console.error(`Error adding metadata for ${meta.path}:`, error);
+				}
+			}
+		} catch (error) {
+			console.error('Error processing image batch:', error);
+		}
+	}
 
 	async function handleScanImageDirectory(): Promise<void> {
 		try {
@@ -79,11 +127,18 @@
 				throw new Error('Failed to scan directory');
 			}
 			const data = await response.json();
-			console.log('data:', data);
+			console.log('Scanned directory data:', data);
 
-			processImageBatch(data.files);
+			if (data.files && data.files.length > 0) {
+				await processImageBatch(data.files);
+			} else {
+				console.log('No new files to process');
+			}
+
+			// Trigger a refetch of the data
+			await client.query(api.meta.getAll, {});
 		} catch (error) {
-			console.error('Error scanning directory:', error);
+			console.error('Error scanning image directory:', error);
 		}
 	}
 
@@ -160,7 +215,7 @@
 			const data = dataWithExtra.data;
 
 			// Ensure the updateMeta mutation is called with the correct fields
-			const metaItem = meta.data?.find(m => m._id === id);
+			const metaItem = metaData?.find(m => m._id === id);
 			if (metaItem) {
 				// Use the processed field if it exists, otherwise default to 1
 				const processed = 'processed' in metaItem ? metaItem.processed : 1;
@@ -185,39 +240,6 @@
 		similarImageId = similarMeta?._id ?? null;
 	}
 
-	async function processImageBatch(imgPaths: string[]): Promise<void> {
-    try {
-        const response = await fetch('/api/process-image-batch', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ paths: imgPaths, sampleTags: sampleTags })
-        });
-        if (!response.ok) {
-            throw new Error('Failed to process image');
-        }
-        const dataWithExtra = await response.json();
-        console.log('Images processed successfully:', dataWithExtra);
-        const data = dataWithExtra.data;
-
-        for (const meta of data) {
-            await client.mutation(api.meta.addMeta, {
-                path: meta.path,
-                type: meta.type,
-                title: meta.title,
-                description: meta.description,
-                tags: meta.tags,
-                matching: meta.matching,
-                embedding: meta.embedding,
-                processed: meta.processed
-            });
-        }
-    } catch (error) {
-        console.error('Error processing image:', error);
-    }
-}
-
 	async function handleRunTsneVisualization(): Promise<void> {
 		try {
 			const response = await fetch('/api/run-tsne-visualization');
@@ -234,16 +256,16 @@
 
 
 	function getUniqueTags(metaData: imageMeta[]): [string, number][] {
-    const tagCounts: Record<string, number> = {};
-    metaData.forEach((meta: imageMeta) => {
-        meta.matching.forEach((tag: string) => {
-            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-        });
-    });
-    return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
-}
+		const tagCounts: Record<string, number> = {};
+		metaData.forEach((meta: imageMeta) => {
+			meta.matching.forEach((tag: string) => {
+				tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+			});
+		});
+		return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+	}
 
-	const uniqueTags = $derived(meta.data ? getUniqueTags(meta.data) : []);
+	const uniqueTags = $derived(metaData ? getUniqueTags(metaData) : []);
 </script>
 
 <svelte:head>
@@ -263,52 +285,62 @@
 </header>
 
 <main class="p-4">
-	{#if meta.isLoading}
-		<p>Loading images...</p>
-	{:else if meta.error}
-		<p>Error loading images: {meta.error}</p>
-	{:else if meta.data && meta.data.length > 0}
-		<div class="grid grid-cols-1 gap-4">
-			{#if sourceMeta}
-				<ShowExistingData {sourceMeta} />
-			{:else}
-				<Button on:click={handleExtractSourceMeta}>
-					Extract Source Meta
-				</Button>
-			{/if}
-			<div>
-				<h2>Tsne</h2>
-				<Tsne 
-					metaData={meta.data ? meta.data.map(m => ({
-						path: m.path,
-						title: m.title,
-						type: m.type,
-						description: m.description,
-						tags: m.tags,
-						matching: m.matching,
-						embedding: m.embedding,
-						processed: m.processed ?? 1 // Use the existing processed value or default to 1
-					})) : []} 
-					folderPath=""
-				/>
-			</div>
-				{#each uniqueTags as [tag, count]}
-				<div>
-					<h2 class="mb-2 text-xl font-bold">{tag} ({count})</h2>
-					<CardCarousel
-						sortedMetaDataArray={meta.data.filter((m) => m.matching.includes(tag))}
-						folderPath="db/media"
-						{handleDeleteMeta}
-						{handleUpdateMeta}
-						{handleSimilarMeta}
-						{similarImageId}
-					/>
-				</div>
-			{/each}
+	<div class="space-y-8">
+		<!-- FolderForm -->
+		<div>
+			<FolderForm data={data.form} {handleAddFolder} />
 		</div>
-	{:else}
-		<FolderForm data={data.form} {handleAddFolder} />
-	{/if}
+
+		<!-- Existing content -->
+		<div>
+			{#if metaIsLoading}
+				<p>Loading images...</p>
+			{:else if metaError}
+				<p>Error loading images: {metaError}</p>
+			{:else if metaData && metaData.length > 0}
+				<div class="space-y-8">
+					{#if sourceMeta}
+						<ShowExistingData {sourceMeta} />
+					{:else}
+						<Button on:click={handleExtractSourceMeta}>
+							Extract Source Meta
+						</Button>
+					{/if}
+					<div>
+						<h2>Tsne</h2>
+						<Tsne 
+							metaData={metaData.map(m => ({
+								path: m.path,
+								title: m.title,
+								type: m.type,
+								description: m.description,
+								tags: m.tags,
+								matching: m.matching,
+								embedding: m.embedding,
+								processed: m.processed ?? 1
+							}))} 
+							folderPath=""
+						/>
+					</div>
+					{#each uniqueTags as [tag, count]}
+						<div>
+							<h2 class="mb-2 text-xl font-bold">{tag} ({count})</h2>
+							<CardCarousel
+								sortedMetaDataArray={metaData.filter((m) => m.matching.includes(tag))}
+								folderPath="db/media"
+								{handleDeleteMeta}
+								{handleUpdateMeta}
+								{handleSimilarMeta}
+								{similarImageId}
+							/>
+						</div>
+					{/each}
+				</div>
+			{:else}
+				<p>No images found. Add a folder to get started.</p>
+			{/if}
+		</div>
+	</div>
 
 	<ToggleGroup.Root size="lg" type="multiple" bind:value={selectedTags} style="padding-top: 20px;">
 		{#each sampleTags as tag}
