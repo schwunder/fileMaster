@@ -184,26 +184,44 @@ const formatDateFields = (
 };
 
 // File system functions
-const getFilesInDirectory = async (
-  directoryPath: string
-): Promise<string[]> => {
-  try {
-    logger.info({ directoryPath }, 'Reading directory');
-    const files = await readdir(directoryPath);
-    logger.info({ fileCount: files.length, files }, 'Files found in directory');
+const SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.mp3', '.pdf'];
 
-    const supportedExtensions = ['.png', '.jpg', '.jpeg', '.mp3', '.pdf'];
+const isSupportedFile = (fileName: string): boolean =>
+  SUPPORTED_EXTENSIONS.some((ext) => fileName.toLowerCase().endsWith(ext));
+
+const getFullPath =
+  (directoryPath: string) =>
+  (fileName: string): string =>
+    path.join(directoryPath, fileName);
+
+const filterAndMapFiles =
+  (directoryPath: string) =>
+  (files: string[]): string[] => {
     const filteredFiles = files
-      .filter((file) =>
-        supportedExtensions.some((ext) => file.toLowerCase().endsWith(ext))
-      )
-      .map((file) => path.join(directoryPath, file));
-
+      .filter(isSupportedFile)
+      .map(getFullPath(directoryPath));
     logger.info(
       { filteredFileCount: filteredFiles.length, filteredFiles },
       'Filtered files'
     );
     return filteredFiles;
+  };
+
+const readDirectoryContents = async (
+  directoryPath: string
+): Promise<string[]> => {
+  logger.info({ directoryPath }, 'Reading directory');
+  const files = await readdir(directoryPath);
+  logger.info({ fileCount: files.length, files }, 'Files found in directory');
+  return files;
+};
+
+const getFilesInDirectory = async (
+  directoryPath: string
+): Promise<string[]> => {
+  try {
+    const files = await readDirectoryContents(directoryPath);
+    return filterAndMapFiles(directoryPath)(files);
   } catch (error) {
     logger.error({ error, directoryPath }, 'Error in getFilesInDirectory');
     throw error;
@@ -364,45 +382,111 @@ export const extractSourceMeta = async (
   }
 };
 
-async function parseAppleProvenance(
-  filePath: string
-): Promise<AppleProvenanceData> {
-  try {
-    const rawData = await fs.readFile(filePath);
-    const [parsedData] = await bplist.parseFile(filePath);
+interface ParsedProvenanceData {
+  [key: string]: unknown;
+}
 
-    const result: AppleProvenanceData = {
-      rawData: rawData.toString('base64'), // Store raw data as base64 string
-      parsedData: parsedData as Record<string, unknown>,
-    };
+const knownFields = [
+  'OriginatorName',
+  'OriginatorIdentifier',
+  'DownloadURL',
+  'DownloadDate',
+  'QuarantineAgentName',
+  'QuarantineAgentBundleIdentifier',
+  'QuarantineTimeStamp',
+] as const;
 
-    // Extract known fields if they exist
-    const knownFields = [
-      'OriginatorName',
-      'OriginatorIdentifier',
-      'DownloadURL',
-      'DownloadDate',
-      'QuarantineAgentName',
-      'QuarantineAgentBundleIdentifier',
-      'QuarantineTimeStamp',
-    ] as const;
+async function readRawData(filePath: string): Promise<Buffer> {
+  return fs.readFile(filePath).catch((error) => {
+    logger.warn(
+      { error, filePath },
+      'Failed to read file, returning empty buffer'
+    );
+    return Buffer.from('');
+  });
+}
 
-    for (const field of knownFields) {
-      if (field in parsedData && typeof parsedData[field] === 'string') {
-        result[field] = parsedData[field] as string;
-      }
+function parseKnownFields(
+  parsedData: ParsedProvenanceData
+): Partial<AppleProvenanceData> {
+  return knownFields.reduce((acc, field) => {
+    if (field in parsedData && typeof parsedData[field] === 'string') {
+      acc[field] = parsedData[field] as string;
     }
+    return acc;
+  }, {} as Partial<AppleProvenanceData>);
+}
 
-    return result;
-  } catch (error) {
-    // In case of error, we still need to provide the rawData
-    const rawData = await fs.readFile(filePath).catch(() => Buffer.from(''));
-    return {
+async function parseBinaryPlist(
+  filePath: string
+): Promise<ParsedProvenanceData> {
+  return bplist
+    .parseFile(filePath)
+    .then(([parsedData]) => parsedData as ParsedProvenanceData)
+    .catch((error) => {
+      logger.error({ error, filePath }, 'Failed to parse binary plist');
+      throw error;
+    });
+}
+
+const parseAppleProvenance = async (
+  filePath: string
+): Promise<AppleProvenanceData> => {
+  const rawData = await readRawData(filePath);
+
+  return parseBinaryPlist(filePath)
+    .then((parsedData) => {
+      const knownFieldsData = parseKnownFields(parsedData);
+      return {
+        rawData: rawData.toString('base64'),
+        parsedData,
+        ...knownFieldsData,
+      };
+    })
+    .catch((error) => ({
       rawData: rawData.toString('base64'),
       error: `Parsing failed: ${error instanceof Error ? error.message : String(error)}`,
-    };
+    }));
+};
+
+const createTempFile = async (
+  filePath: string,
+  attr: string
+): Promise<string> => {
+  const tempFile = path.join(
+    path.dirname(filePath),
+    `.temp_${path.basename(filePath)}_${attr}`
+  );
+  const attrValue = await xattr.getXattr(filePath, attr);
+  await fs.writeFile(tempFile, attrValue);
+  return tempFile;
+};
+
+const cleanupTempFile = async (tempFile: string): Promise<void> => {
+  return fs.unlink(tempFile).catch((error) => {
+    logger.warn({ error, tempFile }, 'Failed to delete temporary file');
+  });
+};
+
+const handleAppleProvenance = async (
+  filePath: string,
+  attr: string
+): Promise<unknown> => {
+  const tempFile = await createTempFile(filePath, attr);
+  try {
+    return await parseAppleProvenance(tempFile);
+  } finally {
+    await cleanupTempFile(tempFile);
   }
-}
+};
+
+const handleRegularAttribute = async (
+  filePath: string,
+  attr: string
+): Promise<string> => {
+  const value = await xattr.getXattr(filePath, attr);
+  return value ? value.toString() : '';
+};
 
 const getExtendedAttributes = async (
   filePath: string
@@ -411,24 +495,11 @@ const getExtendedAttributes = async (
   const result: Record<string, unknown> = {};
 
   for (const attr of attributes) {
-    if (attr === 'com.apple.provenance') {
-      // Create a temporary file with the attribute content
-      const tempFile = path.join(
-        path.dirname(filePath),
-        `.temp_${path.basename(filePath)}_${attr}`
-      );
-      try {
-        const attrValue = await xattr.getXattr(filePath, attr);
-        await fs.writeFile(tempFile, attrValue);
-        result[attr] = await parseAppleProvenance(tempFile);
-      } finally {
-        // Clean up the temporary file
-        await fs.unlink(tempFile).catch(() => {}); // Ignore errors if file doesn't exist
-      }
-    } else {
-      const value = await xattr.getXattr(filePath, attr);
-      result[attr] = value ? value.toString() : '';
-    }
+    result[attr] =
+      attr === 'com.apple.provenance'
+        ? await handleAppleProvenance(filePath, attr)
+        : await handleRegularAttribute(filePath, attr);
   }
+
   return result;
 };
