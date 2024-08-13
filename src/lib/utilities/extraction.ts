@@ -184,7 +184,15 @@ const formatDateFields = (
 };
 
 // File system functions
-const SUPPORTED_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.mp3', '.pdf'];
+const SUPPORTED_EXTENSIONS = [
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.mp3',
+  '.pdf',
+  '.avif',
+  '.heic',
+];
 
 const isSupportedFile = (fileName: string): boolean =>
   SUPPORTED_EXTENSIONS.some((ext) => fileName.toLowerCase().endsWith(ext));
@@ -216,12 +224,59 @@ const readDirectoryContents = async (
   return files;
 };
 
+const groupFilesByBaseName = (files: string[]): Record<string, string[]> => {
+  return files.reduce(
+    (acc, file) => {
+      const baseName = path.parse(file).name;
+      if (!acc[baseName]) acc[baseName] = [];
+      acc[baseName].push(file);
+      return acc;
+    },
+    {} as Record<string, string[]>
+  );
+};
+
+const selectFileFromGroup = async (group: string[]): Promise<string> => {
+  if (group.length === 1) return group[0];
+
+  // Prioritize non-AVIF and non-HEIC files
+  const preferredFile = group.find(
+    (file) =>
+      !file.toLowerCase().endsWith('.avif') &&
+      !file.toLowerCase().endsWith('.heic')
+  );
+  if (preferredFile) return preferredFile;
+
+  // If all files are AVIF or HEIC, select the oldest one
+  const fileStats = await Promise.all(
+    group.map(async (file) => ({
+      file,
+      stat: await fs.stat(file),
+    }))
+  );
+
+  return fileStats.sort((a, b) => a.stat.birthtimeMs - b.stat.birthtimeMs)[0]
+    .file;
+};
+
 const getFilesInDirectory = async (
   directoryPath: string
 ): Promise<string[]> => {
   try {
     const files = await readDirectoryContents(directoryPath);
-    return filterAndMapFiles(directoryPath)(files);
+    const filteredFiles = filterAndMapFiles(directoryPath)(files);
+    const groupedFiles = groupFilesByBaseName(filteredFiles);
+
+    const selectedFiles = await Promise.all(
+      Object.values(groupedFiles).map(selectFileFromGroup)
+    );
+
+    logger.info(
+      { selectedFileCount: selectedFiles.length, selectedFiles },
+      'Selected files'
+    );
+
+    return selectedFiles;
   } catch (error) {
     logger.error({ error, directoryPath }, 'Error in getFilesInDirectory');
     throw error;
@@ -290,7 +345,8 @@ const extractFileMetadata = async (
     systemInfo: await getSystemInfo(),
   };
 
-  if (filePath.endsWith('.mp3')) {
+  const fileExtension = path.extname(filePath).toLowerCase();
+  if (fileExtension === '.mp3') {
     const fileBuffer = await readFile(filePath);
     const audioMetadata = await mm.parseBuffer(fileBuffer, 'audio/mpeg');
     const id3Metadata = nodeId3.read(filePath);
@@ -299,8 +355,12 @@ const extractFileMetadata = async (
       ...audioMetadata.common,
       id3: id3Metadata,
     };
-  } else if (filePath.endsWith('.pdf')) {
+  } else if (fileExtension === '.pdf') {
     metadata.pdf = await readPdfMetadata(filePath);
+  } else if (fileExtension === '.avif' || fileExtension === '.heic') {
+    // For AVIF and HEIC files, we'll rely on ExifTool for metadata extraction
+    // ExifTool should already handle these formats, so no additional processing is needed
+    logger.info({ filePath }, 'Extracted metadata for AVIF/HEIC file');
   }
 
   return processMetadata(flattenMetadata(metadata));

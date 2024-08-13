@@ -69,7 +69,16 @@
 
 			if (data.newFiles && data.newFiles.length > 0) {
 				console.log('New files copied:', data.newFiles);
-				await processImageBatch(data.newFiles);
+				// Filter out existing files
+				const existingFiles = await client.query(api.meta.getAllPaths, {});
+				const filesToProcess = data.newFiles.filter((file: string) => !existingFiles.includes(file));
+				
+				if (filesToProcess.length > 0) {
+					console.log('Files to process:', filesToProcess);
+					await processImageBatch(filesToProcess);
+				} else {
+					console.log('All files already exist in the library');
+				}
 			} else {
 				console.log('No new files copied');
 			}
@@ -101,7 +110,8 @@
 			for (const meta of data) {
 				try {
 					await client.mutation(api.meta.addMeta, {
-						path: meta.path,
+						originalPath: meta.originalPath,
+						convertedPath: meta.convertedPath,
 						type: meta.type,
 						title: meta.title,
 						description: meta.description,
@@ -163,7 +173,12 @@
 				console.log('Processing file:', filePath);
 				for (const meta of metadata) {
 					// Validate metadata using imageMetaSchema
-					const parsedMeta = imageMetaSchema.parse({...meta, processed: 1});
+					const parsedMeta = imageMetaSchema.parse({
+						...meta,
+						originalPath: meta.path, // Add this line
+						convertedPath: meta.path, // Add this line
+						processed: 1
+					});
 					await client.mutation(api.meta.addMeta, parsedMeta);
 				}
 			}
@@ -235,6 +250,8 @@
 				const processed = 'processed' in metaItem ? metaItem.processed : 1;
 				await client.mutation(api.meta.updateMeta, {
 					id: id as Id<'meta'>,
+					originalPath: data.originalPath,
+					convertedPath: data.convertedPath,
 					title: data.title,
 					description: data.description,
 					tags: data.tags,
@@ -322,7 +339,8 @@
 						<h2>Tsne</h2>
 						<Tsne 
 							metaData={metaData.map(m => ({
-								path: m.path,
+								originalPath: m.originalPath,
+								convertedPath: m.convertedPath,
 								title: m.title,
 								type: m.type,
 								description: m.description,

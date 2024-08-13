@@ -4,7 +4,8 @@ import { v } from 'convex/values';
 export default defineSchema({
   meta: defineTable({
     type: v.string(),
-    path: v.string(),
+    originalPath: v.string(),
+    convertedPath: v.string(),
     title: v.string(),
     description: v.string(),
     tags: v.array(v.string()),

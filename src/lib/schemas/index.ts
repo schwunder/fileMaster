@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 export const imageMetaSchema = z.object({
   type: z.string(),
-  path: z.string(),
+  originalPath: z.string(),
+  convertedPath: z.string(),
   title: z.string(),
   description: z.string(),
   tags: z.array(z.string()),

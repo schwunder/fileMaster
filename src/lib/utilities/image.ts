@@ -216,15 +216,22 @@ export async function processImage(
       sampleTags
     );
 
+    // Create the convertedPath by changing the extension to .avif
+    const convertedPath = path.join(
+      path.dirname(imgPath),
+      path.basename(imgPath, path.extname(imgPath)) + '.avif'
+    );
+
     const imageMeta: imageMeta = {
-      path: imgPath,
+      originalPath: imgPath,
+      convertedPath: convertedPath,
       tags,
       matching,
       title,
       description,
       embedding,
       type: 'image',
-      processed: 1, // Change this from true to 1
+      processed: 1,
     };
 
     return imageMeta;

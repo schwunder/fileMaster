@@ -1,10 +1,12 @@
+import { truncateLog } from './../lib/utilities/string';
 import { mutation, query } from './_generated/server';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
 
 export default defineSchema({
   meta: defineTable({
-    path: v.string(),
+    originalPath: v.string(),
+    convertedPath: v.string(),
     type: v.string(),
     title: v.string(),
     description: v.string(),
@@ -48,14 +50,14 @@ export const getByIdArray = query({
 export const getAll = query(async ({ db }) => {
   console.log('Fetching all images from the database');
   const images = await db.query('meta').collect();
-  console.log('Fetched images:', images);
+  console.log('Fetched images:', truncateLog(JSON.stringify(images)));
   return images;
 });
 
 export const getAllPaths = query(async ({ db }) => {
   console.log('Fetching all image paths from the database');
   const images = await db.query('meta').collect();
-  const paths = images.map((img) => img.path);
+  const paths = images.map((img) => img.originalPath);
   console.log('Fetched image paths:', paths);
   return paths;
 });
@@ -64,7 +66,9 @@ export const getNewPaths = query({
   args: { scannedPaths: v.array(v.string()) },
   handler: async (ctx, args) => {
     const existingImages = await ctx.db.query('meta').collect();
-    const existingPathSet = new Set(existingImages.map((img) => img.path));
+    const existingPathSet = new Set(
+      existingImages.map((img) => img.originalPath)
+    );
 
     const newPaths = args.scannedPaths.filter(
       (path) => !existingPathSet.has(path)
@@ -77,7 +81,8 @@ export const getNewPaths = query({
 
 export const addMeta = mutation({
   args: {
-    path: v.string(),
+    originalPath: v.string(),
+    convertedPath: v.string(),
     type: v.string(),
     title: v.string(),
     description: v.string(),
@@ -95,7 +100,8 @@ export const addMeta = mutation({
 export const updateMeta = mutation({
   args: {
     id: v.id('meta'),
-    path: v.optional(v.string()),
+    originalPath: v.optional(v.string()),
+    convertedPath: v.optional(v.string()),
     type: v.optional(v.string()),
     title: v.optional(v.string()),
     description: v.optional(v.string()),

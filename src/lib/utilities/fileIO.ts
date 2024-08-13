@@ -6,6 +6,7 @@ import {
   writeFile,
   copyFile,
   mkdir,
+  unlink,
 } from 'fs/promises';
 import type { imageMeta } from '$lib/schemas';
 import pino from 'pino';
@@ -14,6 +15,7 @@ import decode from 'heic-decode';
 import convert from 'heic-convert';
 import sharp from 'sharp';
 import { fileTypeFromBuffer } from 'file-type';
+import { createHash } from 'crypto';
 
 // Logger instance
 const logger = pino();
@@ -158,13 +160,101 @@ const processHeicFile = async (
   fileType: string,
   sourcePath: string,
   destDir: string
-): Promise<void> => {
+): Promise<string | null> => {
   if (fileType === 'image/heic' || fileType === 'image/heif') {
-    await decodeAndSaveHeicRawData(sourcePath, destDir).catch(
-      (error: unknown) => {
-        logger.error(`Error processing HEIC file ${sourcePath}: ${error}`);
+    try {
+      logger.info(`Attempting to convert ${sourcePath} to AVIF`);
+      const avifPath = await saveAsAvif(sourcePath, destDir);
+      if (!avifPath) {
+        logger.error(
+          `AVIF conversion failed for ${sourcePath}. Check previous error logs for details.`
+        );
+        return null;
+      } else {
+        logger.info(`Successfully saved AVIF for ${sourcePath} at ${avifPath}`);
+        return avifPath;
       }
-    );
+    } catch (error) {
+      logger.error(
+        `Unexpected error during HEIC processing for ${sourcePath}: ${error}`
+      );
+      return null;
+    }
+  }
+  logger.info(`File ${sourcePath} is not HEIC/HEIF. Skipping conversion.`);
+  return sourcePath; // Return the original path if not HEIC/HEIF
+};
+
+// Save as AVIF
+const saveAsAvif = async (
+  sourcePath: string,
+  destDir: string
+): Promise<string | null> => {
+  const avifFileName = basename(sourcePath, extname(sourcePath)) + '.avif';
+  const avifPath = join(destDir, avifFileName);
+
+  try {
+    // Read the HEIC file
+    const fileContent = await readFile(sourcePath);
+
+    // Decode the HEIC file
+    const decodedImage = await decode({ buffer: fileContent });
+
+    // Create a Sharp instance from the decoded data
+    const sharpInstance = sharp(decodedImage.data, {
+      raw: {
+        width: decodedImage.width,
+        height: decodedImage.height,
+        channels: 4, // Assuming RGBA
+      },
+    });
+
+    // Convert to AVIF and save
+    await sharpInstance.avif({ quality: 100 }).toFile(avifPath);
+
+    const fileStats = await stat(avifPath);
+    if (fileStats.size === 0) {
+      throw new Error('Saved AVIF file is empty');
+    }
+
+    logger.info(`Saved HEIC as AVIF: ${avifPath} (${fileStats.size} bytes)`);
+    return avifPath;
+  } catch (error) {
+    let errorMessage = `Error saving HEIC as AVIF: ${error}`;
+    if (error instanceof Error) {
+      errorMessage += `\nError name: ${error.name}\nError message: ${error.message}`;
+      if (error.stack) {
+        errorMessage += `\nStack trace: ${error.stack}`;
+      }
+    }
+
+    // Add more context to the error message
+    errorMessage += `\nSource file: ${sourcePath}`;
+    errorMessage += `\nDestination file: ${avifPath}`;
+
+    try {
+      const sourceStats = await stat(sourcePath);
+      errorMessage += `\nSource file size: ${sourceStats.size} bytes`;
+    } catch (statError) {
+      errorMessage += `\nUnable to get source file stats: ${statError}`;
+    }
+
+    logger.error(errorMessage);
+
+    // Attempt to get more information about the source file
+    try {
+      const metadata = await sharp(sourcePath).metadata();
+      logger.info(`Source file metadata: ${JSON.stringify(metadata, null, 2)}`);
+    } catch (metadataError) {
+      logger.error(`Unable to get source file metadata: ${metadataError}`);
+    }
+
+    try {
+      await unlink(avifPath).catch(() => {}); // Ignore errors when deleting
+    } catch (unlinkError) {
+      logger.error(`Error deleting failed AVIF file: ${unlinkError}`);
+    }
+    return null;
   }
 };
 
@@ -189,22 +279,56 @@ const getFileTypeWithErrorHandling = async (
 const copyAndProcessFile = async (
   sourcePath: string,
   destDir: string
-): Promise<string | null> => {
+): Promise<{ original: string | null; processed: string | null }> => {
   const fileType = await getFileTypeWithErrorHandling(sourcePath);
   const destPath = getDestinationPath(sourcePath, destDir, fileType);
 
   if (!(await validateCopy(sourcePath, destPath))) {
-    return null;
+    return { original: null, processed: null };
   }
-
   logger.info(`Successfully copied ${sourcePath} to ${destPath}`);
 
-  // Process HEIC files
+  let processedPath = null;
+
+  // Process HEIC/HEIF files using the existing special algorithm
   if (fileType === 'image/heic' || fileType === 'image/heif') {
-    await processHeicFile(fileType, sourcePath, destDir);
+    processedPath = await processHeicFile(fileType, destPath, destDir);
+  } else {
+    // For all other supported image types, convert to AVIF
+    processedPath = await convertToAvif(destPath, destDir);
   }
 
-  return destPath;
+  if (processedPath) {
+    logger.info(`Processed ${destPath} to ${processedPath}`);
+  }
+
+  return { original: destPath, processed: processedPath };
+};
+
+// New function to convert images to AVIF
+const convertToAvif = async (
+  inputPath: string,
+  destDir: string
+): Promise<string | null> => {
+  const avifFileName = basename(inputPath, extname(inputPath)) + '.avif';
+  const avifPath = join(destDir, avifFileName);
+
+  try {
+    await sharp(inputPath)
+      .avif({ quality: 80 }) // You can adjust the quality as needed
+      .toFile(avifPath);
+
+    const fileStats = await stat(avifPath);
+    if (fileStats.size === 0) {
+      throw new Error('Saved AVIF file is empty');
+    }
+
+    logger.info(`Converted to AVIF: ${avifPath} (${fileStats.size} bytes)`);
+    return avifPath;
+  } catch (error) {
+    logger.error(`Error converting ${inputPath} to AVIF: ${error}`);
+    return null;
+  }
 };
 
 // Verify file integrity
@@ -298,7 +422,13 @@ interface RawData {
   height: number;
 }
 
-// Copy files to database
+// New function to calculate file hash
+const calculateFileHash = async (filePath: string): Promise<string> => {
+  const buffer = await readFile(filePath);
+  return createHash('sha256').update(buffer).digest('hex');
+};
+
+// Modified copyToDB function
 export const copyToDB = async (
   absoluteDirectoryPath: string
 ): Promise<string[]> => {
@@ -314,16 +444,28 @@ export const copyToDB = async (
   });
   logger.info(`Found ${imageFiles.length} image files`);
 
-  const copiedFiles = await Promise.all(
-    imageFiles.map((file) => copyAndProcessFile(file, destDir))
-  );
-  const successfulCopies = copiedFiles.filter(Boolean) as string[];
+  const processedHashes = new Set<string>();
+  const originalCopies: string[] = [];
+
+  for (const file of imageFiles) {
+    const fileHash = await calculateFileHash(file);
+    if (!processedHashes.has(fileHash)) {
+      const result = await copyAndProcessFile(file, destDir);
+      if (result.original) {
+        originalCopies.push(result.original);
+        processedHashes.add(fileHash);
+      }
+    } else {
+      logger.info(`Skipping duplicate file: ${file}`);
+    }
+  }
 
   logger.info(
-    `Successfully processed ${successfulCopies.length} out of ${imageFiles.length} files`
+    `Successfully processed ${originalCopies.length} out of ${imageFiles.length} files`
   );
+  logger.info(`Original copied files: ${originalCopies.join(', ')}`);
 
-  return successfulCopies;
+  return originalCopies;
 };
 
 // Read file and handle errors
@@ -456,9 +598,8 @@ export const resizeImage = async (
       throw error;
     });
 };
-
 // Move this function declaration to the top of the file
-const decodeAndSaveHeicRawData = async (
+export const decodeAndSaveHeicRawData = async (
   sourcePath: string,
   destDir: string
 ): Promise<string | null> => {

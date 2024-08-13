@@ -22,7 +22,8 @@
 	export let sortedMetaDataArray: Array<{
 		_id: Id<'meta'>;
 		_creationTime: number;
-		path: string;
+		originalPath: string;
+		convertedPath: string;
 		title: string;
 		type: string;
 		description: string;
@@ -121,7 +122,7 @@
 			<Carousel.Item
 				class="carousel-item pl-2 md:pl-4"
 				style="opacity: {1 - Math.abs($current - (i + 1)) * 0.5}"
-				on:click={(e) => setActiveImage(metaData.path, e)}
+				on:click={(e) => setActiveImage(metaData.convertedPath, e)}
 				on:similarRequest={(event: CustomEvent<Id<'meta'>>) => handleSimilarMeta(event.detail)}
 			>
 				<div class:is-prev={i === $current - 2} class:is-next={i === $current}>

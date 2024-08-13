@@ -29,7 +29,7 @@
 			await tick();
 			const context = canvas.getContext('2d');
 			if (context) {
-				const imagePaths = metaData.map(meta => meta.path);
+				const imagePaths = metaData.map(meta => meta.originalPath);
 				await renderEmbedding(context, adjustedCoordinates, imageSize, canvas, imagePaths, folderPath);
 			}
 		} catch (err) {

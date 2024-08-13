@@ -30,15 +30,18 @@ export async function GET() {
 
     // Wrap the results in an object
     return json({ success: true, results });
-  } catch (error) {
+  } catch (error: unknown) {
+    // Explicitly type the error as unknown
     logger.error({ error }, 'Error extracting source metadata');
-    return json(
-      {
-        success: false,
-        error: 'Internal Server Error',
-        details: error.message,
-      },
-      { status: 500 }
-    );
+
+    // Use type narrowing to handle the error
+    if (error instanceof Error) {
+      return json({ success: false, error: error.message }, { status: 500 });
+    } else {
+      return json(
+        { success: false, error: 'An unknown error occurred' },
+        { status: 500 }
+      );
+    }
   }
 }
