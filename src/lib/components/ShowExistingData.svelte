@@ -1,55 +1,60 @@
 <script lang="ts">
   import type { SourceMeta, MetadataValue } from '../utilities/extraction';
 
-  export let sourceMeta: SourceMeta;
+  export let sourceMeta: SourceMeta = [];
+
   let error: string | null = null;
 
-  function formatValue(value: MetadataValue): string {
+  const formatValue = (value: MetadataValue): string => {
     if (value instanceof Date) {
       return value.toLocaleString();
     }
     return String(value);
+  };
+
+  const getImageUrl = (relativePath: string): string => {
+    return `/${relativePath}`;
+  };
+
+  function parseJSON(value: string) {
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      console.warn(`Failed to parse JSON: ${value}`);
+      return null;
+    }
   }
 
-  function getRelativePath(fullPath: string): string {
-    const parts = fullPath.split('/');
-    return parts.slice(-2).join('/'); // Returns "media/filename.png"
-  }
-
-  function getFileName(metadata: Record<string, unknown>): string {
-    return (metadata.basic as Record<string, unknown>)?.FileName as string || 'unknown content';
-  }
-
-  function handleImageError(event: Event): void {
+  const handleImageError = (event: Event): void => {
     const target = event.target as HTMLImageElement;
     if (target) {
       target.style.display = 'none';
     }
-  }
+  };
 
-  function parseJSON(jsonString: string): Record<string, unknown> {
-    try {
-      return JSON.parse(jsonString);
-    } catch (e) {
-      console.error('Error parsing JSON:', e);
-      return { error: 'Invalid JSON' };
+  $: {
+    console.log('ShowExistingData component received sourceMeta:', sourceMeta);
+    console.log('sourceMeta length:', sourceMeta.length);
+    console.log('sourceMeta type:', typeof sourceMeta);
+    if (Array.isArray(sourceMeta)) {
+      console.log('sourceMeta is an array');
+    } else {
+      console.log('sourceMeta is not an array');
     }
   }
-
-  console.log('ShowExistingData component received sourceMeta:', sourceMeta);
 </script>
 
 <div class="container">
   <h2 class="text-2xl font-bold mb-4">Existing Data</h2>
   {#if error}
     <div class="error">{error}</div>
-  {:else if sourceMeta && sourceMeta.length > 0}
-    {#each sourceMeta as { filePath, metadata }}
+  {:else if sourceMeta.length > 0}
+    {#each sourceMeta as { filePath, metadata, relativePath }}
       <div class="metadata-item">
-        <h3 class="text-xl font-semibold mb-2">{filePath}</h3>
+        <h3 class="text-xl font-semibold mb-2">{relativePath}</h3>
         <img 
-          src={getRelativePath(filePath)} 
-          alt={`Image of ${getFileName(metadata)}`}
+          src={getImageUrl(relativePath)} 
+          alt={relativePath.split('/').pop() || ''}
           class="w-64 h-64 object-cover mb-4"
           on:error={handleImageError}
         />
@@ -58,7 +63,19 @@
             <div class="metadata-entry">
               <strong class="font-medium">{key}:</strong>
               <pre class="json-content">
-                {JSON.stringify(parseJSON(value as string), null, 2)}
+                {#if typeof value === 'string'}
+                  {#if value.startsWith('{') || value.startsWith('[')}
+                    {#if parseJSON(value)}
+                      {JSON.stringify(parseJSON(value), null, 2)}
+                    {:else}
+                      {value}
+                    {/if}
+                  {:else}
+                    {value}
+                  {/if}
+                {:else}
+                  {JSON.stringify(value)}
+                {/if}
               </pre>
             </div>
           {/each}

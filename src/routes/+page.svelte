@@ -48,9 +48,9 @@
 
 	let similarImageId: Id<'meta'> | null = $state(null);
 	let selectedTags: string[] = $state([...sampleTags]); // Initialize with all sample tags selected
-	let sourceMeta: SourceMeta | null = $state(null); // Correct the type definition
+	let sourceMeta: SourceMeta = $state([]);
 
-	async function handleAddFolder(folderPath: string): Promise<void> {
+	const handleAddFolder = async (folderPath: string): Promise<void> => {
 		console.log('folderPath:', folderPath);
 		const absoluteDirectoryPath = folderPath;
 		try {
@@ -78,9 +78,9 @@
 		} catch (error) {
 			console.error('Error adding folder:', error);
 		}
-	}
+	};
 
-	async function processImageBatch(imgPaths: string[]): Promise<void> {
+	const processImageBatch = async (imgPaths: string[]): Promise<void> => {
 		try {
 			console.log('Processing image batch:', imgPaths);
 
@@ -118,9 +118,9 @@
 		} catch (error) {
 			console.error('Error processing image batch:', error);
 		}
-	}
+	};
 
-	async function handleScanImageDirectory(): Promise<void> {
+	const handleScanImageDirectory = async (): Promise<void> => {
 		try {
 			const response = await fetch('/api/scan-image-directory');
 			if (!response.ok) {
@@ -140,9 +140,9 @@
 		} catch (error) {
 			console.error('Error scanning image directory:', error);
 		}
-	}
+	};
 
-	async function handleScanJsonDirectory(): Promise<void> {
+	const handleScanJsonDirectory = async (): Promise<void> => {
 		try {
 			const response = await fetch('/api/scan-json-directory');
 			if (!response.ok) {
@@ -163,32 +163,38 @@
 		} catch (error) {
 			console.error('Error scanning directory:', error);
 		}
-	}
+	};
 
-	async function handleExtractSourceMeta(): Promise<void> {
+	const handleExtractSourceMeta = async (): Promise<void> => {
 		try {
 			const response = await fetch('/api/extract-source-meta');
 			if (!response.ok) {
 				throw new Error('Failed to extract source metadata');
 			}
 			const data = await response.json();
-			sourceMeta = data.results as SourceMeta;
-			console.log('Source metadata extracted successfully:', sourceMeta);
+			if (data.success && Array.isArray(data.results)) {
+				sourceMeta = data.results;
+				console.log('Source metadata extracted successfully:', sourceMeta);
+				console.log('sourceMeta length:', sourceMeta.length);
+			} else {
+				throw new Error('Invalid response format');
+			}
 		} catch (error) {
 			console.error('Error extracting source metadata:', error);
+			sourceMeta = [];
 		}
-	}
+	};
 
-	async function handleDeleteMeta(id: Id<'meta'>): Promise<void> {
+	const handleDeleteMeta = async (id: Id<'meta'>): Promise<void> => {
 		try {
 			client.mutation(api.meta.deleteMeta, { id: id as Id<'meta'> });
 			console.log('Meta deleted successfully');
 		} catch (error) {
 			console.error('Error deleting meta:', error);
 		}
-	}
+	};
 
-	async function handleDeleteAllMeta() {
+	const handleDeleteAllMeta = async () => {
 		try {
 			await client.mutation(api.meta.deleteAllMeta, {});
 			console.log("All meta entries deleted");
@@ -196,9 +202,9 @@
 		} catch (error) {
 			console.error("Error deleting meta entries:", error);
 		}
-	}
+	};
 
-	async function handleUpdateMeta(id: Id<'meta'>, imgPath: string): Promise<void> {
+	const handleUpdateMeta = async (id: Id<'meta'>, imgPath: string): Promise<void> => {
 		try {
 			const response = await fetch('/api/update-image-meta', {
 				method: 'POST',
@@ -233,14 +239,14 @@
 		} catch (error) {
 			console.error('Error processing image:', error);
 		}
-	}
+	};
 
-	async function handleSimilarMeta(id: Id<'meta'>) {
+	const handleSimilarMeta = async (id: Id<'meta'>) => {
 		const similarMeta = await client.action(api.search.mostSimilarMeta, { id });
 		similarImageId = similarMeta?._id ?? null;
-	}
+	};
 
-	async function handleRunTsneVisualization(): Promise<void> {
+	const handleRunTsneVisualization = async (): Promise<void> => {
 		try {
 			const response = await fetch('/api/run-tsne-visualization');
 			if (!response.ok) {
@@ -251,11 +257,9 @@
 		} catch (error) {
 			console.error('Error running t-SNE visualization:', error);
 		}
-	}
+	};
 
-
-
-	function getUniqueTags(metaData: imageMeta[]): [string, number][] {
+	const getUniqueTags = (metaData: imageMeta[]): [string, number][] => {
 		const tagCounts: Record<string, number> = {};
 		metaData.forEach((meta: imageMeta) => {
 			meta.matching.forEach((tag: string) => {
@@ -263,7 +267,7 @@
 			});
 		});
 		return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
-	}
+	};
 
 	const uniqueTags = $derived(metaData ? getUniqueTags(metaData) : []);
 </script>
@@ -299,8 +303,8 @@
 				<p>Error loading images: {metaError}</p>
 			{:else if metaData && metaData.length > 0}
 				<div class="space-y-8">
-					{#if sourceMeta}
-						<ShowExistingData {sourceMeta} />
+					{#if sourceMeta.length > 0}
+						<ShowExistingData sourceMeta={JSON.parse(JSON.stringify(sourceMeta))} />
 					{:else}
 						<Button on:click={handleExtractSourceMeta}>
 							Extract Source Meta
