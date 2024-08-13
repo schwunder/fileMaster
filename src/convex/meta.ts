@@ -52,6 +52,29 @@ export const getAll = query(async ({ db }) => {
   return images;
 });
 
+export const getAllPaths = query(async ({ db }) => {
+  console.log('Fetching all image paths from the database');
+  const images = await db.query('meta').collect();
+  const paths = images.map((img) => img.path);
+  console.log('Fetched image paths:', paths);
+  return paths;
+});
+
+export const getNewPaths = query({
+  args: { scannedPaths: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const existingImages = await ctx.db.query('meta').collect();
+    const existingPathSet = new Set(existingImages.map((img) => img.path));
+
+    const newPaths = args.scannedPaths.filter(
+      (path) => !existingPathSet.has(path)
+    );
+
+    console.log('New paths to process:', newPaths);
+    return newPaths;
+  },
+});
+
 export const addMeta = mutation({
   args: {
     path: v.string(),

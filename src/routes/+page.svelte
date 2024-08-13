@@ -130,9 +130,17 @@
 			console.log('Scanned directory data:', data);
 
 			if (data.files && data.files.length > 0) {
-				await processImageBatch(data.files);
+				// Use the new getNewPaths query to filter out existing paths
+				const newFiles = await client.query(api.meta.getNewPaths, { scannedPaths: data.files });
+				console.log('New files to process:', newFiles);
+
+				if (newFiles.length > 0) {
+					await processImageBatch(newFiles);
+				} else {
+					console.log('No new files to process');
+				}
 			} else {
-				console.log('No new files to process');
+				console.log('No files found in the scanned directory');
 			}
 
 			// Trigger a refetch of the data
