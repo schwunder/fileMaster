@@ -38,9 +38,11 @@
 	};
 </script>
 
-{#if showButton}
+<div class="flex flex-col items-center justify-center">
+	{#if showButton}
 	<Button on:click={handleTsneVisualization}>Start t-SNE Visualization</Button>
 {/if}
 {#if showCanvas}
 	<canvas bind:this={canvas} width={canvasSize} height={canvasSize}></canvas>
 {/if}
+</div>

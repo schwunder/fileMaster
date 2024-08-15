@@ -1,29 +1,13 @@
 <script lang="ts">
   import type { SourceMeta, MetadataValue } from '../utilities/extraction';
+  import { Button } from '$lib/components/ui/button';
+  import { getImageUrl, parseJSON } from '../utilities/string'; // Import the functions
 
   export let sourceMeta: SourceMeta = [];
+  export let onHide: () => void;
+  export let onExtract: () => void;
 
   let error: string | null = null;
-
-  const formatValue = (value: MetadataValue): string => {
-    if (value instanceof Date) {
-      return value.toLocaleString();
-    }
-    return String(value);
-  };
-
-  const getImageUrl = (relativePath: string): string => {
-    return `/${relativePath}`;
-  };
-
-  function parseJSON(value: string) {
-    try {
-      return JSON.parse(value);
-    } catch (error) {
-      console.warn(`Failed to parse JSON: ${value}`);
-      return null;
-    }
-  }
 
   const handleImageError = (event: Event): void => {
     const target = event.target as HTMLImageElement;
@@ -44,83 +28,48 @@
   }
 </script>
 
-<div class="container">
-  <h2 class="text-2xl font-bold mb-4">Existing Data</h2>
-  {#if error}
-    <div class="error">{error}</div>
-  {:else if sourceMeta.length > 0}
-    {#each sourceMeta as { filePath, metadata, relativePath }}
-      <div class="metadata-item">
-        <h3 class="text-xl font-semibold mb-2">{relativePath}</h3>
-        <img 
-          src={getImageUrl(relativePath)} 
-          alt={relativePath.split('/').pop() || ''}
-          class="w-64 h-64 object-cover mb-4"
-          on:error={handleImageError}
-        />
-        <div class="metadata-grid">
-          {#each Object.entries(metadata) as [key, value]}
-            <div class="metadata-entry">
-              <strong class="font-medium">{key}:</strong>
-              <pre class="json-content">
-                {#if typeof value === 'string'}
-                  {#if value.startsWith('{') || value.startsWith('[')}
-                    {#if parseJSON(value)}
-                      {JSON.stringify(parseJSON(value), null, 2)}
+{#if sourceMeta.length > 0}
+  <div class="flex flex-col items-center justify-center container mx-auto p-4 max-w-2xl">
+    <h2 class="text-2xl font-bold mb-4">Existing Data</h2>
+    {#if error}
+      <div class="error">{error}</div>
+    {:else}
+      {#each sourceMeta as { filePath, metadata, relativePath }}
+        <div class="border border-gray-300 rounded-lg p-4 mb-4">
+          <h3 class="text-xl font-semibold mb-2">{relativePath}</h3>
+          <img 
+            src={getImageUrl(relativePath)} 
+            alt={relativePath.split('/').pop() || ''}
+            class="w-64 h-64 object-cover mb-4"
+            on:error={handleImageError}
+          />
+          <div class="grid gap-2">
+            {#each Object.entries(metadata) as [key, value]}
+              <div class="bg-gray-100 rounded-md p-2">
+                <strong class="font-medium">{key}:</strong>
+                <pre class="whitespace-pre-wrap break-words text-sm leading-5 max-h-52 overflow-y-auto bg-gray-200 p-2 rounded-md">
+                  {#if typeof value === 'string'}
+                    {#if value.startsWith('{') || value.startsWith('[')}
+                      {#if parseJSON(value)}
+                        {JSON.stringify(parseJSON(value), null, 2)}
+                      {:else}
+                        {value}
+                      {/if}
                     {:else}
                       {value}
                     {/if}
                   {:else}
-                    {value}
+                    {JSON.stringify(value)}
                   {/if}
-                {:else}
-                  {JSON.stringify(value)}
-                {/if}
-              </pre>
-            </div>
-          {/each}
+                </pre>
+              </div>
+            {/each}
+          </div>
         </div>
-      </div>
-    {/each}
-  {:else}
-    <p>No source metadata available.</p>
-  {/if}
-</div>
-
-<style>
-  .container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 1rem;
-  }
-
-  .metadata-item {
-    border: 1px solid #e2e8f0;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  .metadata-grid {
-    display: grid;
-    gap: 0.5rem;
-  }
-
-  .metadata-entry {
-    background-color: #f7fafc;
-    border-radius: 0.25rem;
-    padding: 0.5rem;
-  }
-
-  .json-content {
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    max-height: 200px;
-    overflow-y: auto;
-    background-color: #edf2f7;
-    padding: 0.5rem;
-    border-radius: 0.25rem;
-  }
-</style>
+      {/each}
+    {/if}
+    <Button on:click={onHide} class="mt-4 flex flex-col items-center justify-center mx-auto">Hide Source Meta</Button>
+  </div>
+{:else}
+  <Button on:click={onExtract} class="flex flex-col items-center justify-center mx-auto">Extract Source Meta</Button>
+{/if}

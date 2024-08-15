@@ -19,3 +19,36 @@ export const formSchema = z.object({
 });
 
 export type FormSchema = z.infer<typeof formSchema>;
+
+export const sampleTags: string[] = [
+  'screenshot',
+  'passport',
+  'document',
+  'bill',
+  'family',
+  'city',
+  'vacation',
+  'landscape',
+  'pet',
+  'art',
+  'male',
+  'female',
+  'selfie',
+  'friends',
+  'home',
+  'work',
+  'event',
+  'party',
+  'food',
+  'drink',
+  'travel',
+  'nature',
+  'birthday',
+  'wedding',
+  'celebration',
+  'holiday',
+  'baby',
+  'school',
+  'fitness',
+  'documentary',
+];

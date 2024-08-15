@@ -20,7 +20,7 @@
 	const { form: formData, enhance, errors, constraints } = form;
 </script>
 
-<form method="POST" use:enhance>
+<form method="POST" use:enhance class="flex flex-row items-center justify-center space-x-4">
 	<Form.Field {form} name="folderPath">
 		<Form.Control let:attrs>
 			<Form.Label>Folder Path</Form.Label>
