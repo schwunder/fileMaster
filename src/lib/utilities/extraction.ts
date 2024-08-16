@@ -11,6 +11,8 @@ import bplist from 'bplist-parser';
 import { Buffer } from 'buffer';
 import fs from 'fs/promises';
 
+// TODO extract data directly from the order to import or even better right from the macos photos app
+
 // Logger setup
 const logger = pino();
 

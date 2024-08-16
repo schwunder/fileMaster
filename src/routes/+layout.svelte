@@ -10,7 +10,7 @@
 </script>
 
 <div class="flex min-h-screen flex-col">
-	<main class="mx-auto flex w-full max-w-4xl flex-1 flex-col p-4">
+	<main class=" flex w-full flex-1 flex-col p-4">
 		<slot />
 	</main>
 

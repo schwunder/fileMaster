@@ -11,9 +11,14 @@
 	let showCanvas = false;
 	let showButton = true;
 	let marginPx = 75;
-	let canvasSize = 800;
-	let imageSize = 40; // Adjust this value to change thumbnail size
-
+	let canvasSize = 5000; // Increased from 800 to 5000
+	let imageSize = 250; // Increased from 40 to 250
+	// TODO: similiar motiv batching. 
+	// maybe use the coordinates to group the images
+	// and then add that to the meta data.
+	// smth like cluter 1 cluster 2 cluster 3 etc.
+	// and then use that to group the images
+	// then have a button to run a other ai api call over that cluster.
 	const handleTsneVisualization = async () => {
 		try {
 			const embeddingData = metaData.map(meta => meta.embedding);

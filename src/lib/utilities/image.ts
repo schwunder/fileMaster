@@ -116,6 +116,9 @@ const getMetadata = async (
         matching: z.array(z.string()),
       }),
       model: createOpenAI({ apiKey: OPENAI_API_KEY })('gpt-4o'),
+      // TODO: add a system prompt
+      // systemPrompt: `You are a helpful assistant that generates metadata for images.`,
+      // TODO: give extracted metadata as context
       prompt: `${comment}---- 
         1. Provide a description and use under ${maxDescriptionLength} tokens.
         2. Generate 1-4 descriptive tags that are relevant to the description. Do not consider the following list of sample tags while generating these tags: ${sampleList}.
@@ -123,6 +126,10 @@ const getMetadata = async (
     })) as {
       object: {
         description: string;
+        // TODO: similiar motiv batching.
+        // not here not in this function.
+        // tsne already does this
+        // but there are no real cate
         matching: string[];
         tags: string[];
         title: string;

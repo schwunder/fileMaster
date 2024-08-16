@@ -4,28 +4,14 @@
 	import { api } from '$convex/_generated/api.js';
 	import type { Id } from '$convex/_generated/dataModel';
 	import { Button } from '$lib/components/ui/button';
-	import * as ToggleGroup from '$lib/components/ui/toggle-group/index.js';
-	import { imageMetaSchema, type imageMeta } from '$lib/schemas';
+	import { imageMetaSchema, type imageMeta, sampleTags } from '$lib/schemas';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import FolderForm from '$lib/components/FolderForm.svelte';
 	import Tsne from '$lib/components/Tsne.svelte';
 	import ShowExistingData from '$lib/components/ShowExistingData.svelte';
+	import TagSelector from '$lib/components/TagSelector.svelte';
 	import type { SourceMeta } from '$lib/utilities/extraction';
 
-	const sampleTags: string[] = [
-		'screenshot',
-		'passport',
-		'document',
-		'bill',
-		'family',
-		'city',
-		'vacation',
-		'landscape',
-		'pet',
-		'art',
-		'male',
-		'female'
-	];
 
 	const client = useConvexClient();
 	let meta = $state(useQuery(api.meta.getAll, {}));
@@ -328,30 +314,25 @@
 				<p>Error loading images: {metaError}</p>
 			{:else if metaData && metaData.length > 0}
 				<div class="space-y-8">
-					{#if sourceMeta.length > 0}
-						<ShowExistingData sourceMeta={JSON.parse(JSON.stringify(sourceMeta))} />
-					{:else}
-						<Button on:click={handleExtractSourceMeta}>
-							Extract Source Meta
-						</Button>
-					{/if}
-					<div>
-						<h2>Tsne</h2>
-						<Tsne 
-							metaData={metaData.map(m => ({
-								originalPath: m.originalPath,
-								convertedPath: m.convertedPath,
-								title: m.title,
-								type: m.type,
-								description: m.description,
-								tags: m.tags,
-								matching: m.matching,
-								embedding: m.embedding,
-								processed: m.processed ?? 1
-							}))} 
-							folderPath=""
-						/>
-					</div>
+					<ShowExistingData 
+					sourceMeta={sourceMeta}
+					onHide={() => sourceMeta = []}
+					onExtract={handleExtractSourceMeta}
+				/>
+				<Tsne 
+					metaData={metaData.map(m => ({
+						originalPath: m.originalPath,
+						convertedPath: m.convertedPath,
+						title: m.title,
+						type: m.type,
+						description: m.description,
+						tags: m.tags,
+						matching: m.matching,
+						embedding: m.embedding,
+						processed: m.processed ?? 1
+					}))} 
+					folderPath=""
+				/>
 					{#each uniqueTags as [tag, count]}
 						<div>
 							<h2 class="mb-2 text-xl font-bold">{tag} ({count})</h2>
@@ -372,23 +353,11 @@
 		</div>
 	</div>
 
-	<ToggleGroup.Root size="lg" type="multiple" bind:value={selectedTags} style="padding-top: 20px;">
-		{#each sampleTags as tag}
-			<ToggleGroup.Item value={tag} aria-label="Toggle {tag}">
-				<div
-					style="display: inline-block; margin: 0 4px; cursor: pointer; background-color: {selectedTags.includes(
-						tag
-					)
-						? '#007BFF'
-						: 'initial'}; color: {selectedTags.includes(tag)
-						? 'white'
-						: 'initial'}; padding: 4px 8px; border-radius: 4px;"
-				>
-					{tag}
-				</div>
-			</ToggleGroup.Item>
-		{/each}
-	</ToggleGroup.Root>
+	<TagSelector 
+	tags={sampleTags} 
+	bind:selectedTags 
+	onTagsChange={(newTags) => { selectedTags = newTags; }}
+/>
 </main>
 
 <footer class="bg-gray-800 p-4 text-center text-white">

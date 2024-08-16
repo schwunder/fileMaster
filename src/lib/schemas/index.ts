@@ -51,4 +51,5 @@ export const sampleTags: string[] = [
   'school',
   'fitness',
   'documentary',
+  'nsfw', // lauritz
 ];

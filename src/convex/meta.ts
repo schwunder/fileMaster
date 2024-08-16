@@ -62,6 +62,21 @@ export const getAllPaths = query(async ({ db }) => {
   return paths;
 });
 
+export const getAllTags = query(async ({ db }) => {
+  const tags = await db.query('meta').collect();
+  const uniqueTags = [...new Set(tags.map((tag) => tag.tags).flat())];
+  return uniqueTags;
+});
+
+export const getPathWithCorrespondingTags = query(async ({ db }) => {
+  const metas = await db.query('meta').collect();
+  const pathsWithTags = metas.map((meta) => ({
+    path: meta.originalPath,
+    tags: meta.tags,
+  }));
+  return pathsWithTags;
+});
+
 export const getNewPaths = query({
   args: { scannedPaths: v.array(v.string()) },
   handler: async (ctx, args) => {
