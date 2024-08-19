@@ -149,3 +149,11 @@ export const incrementProcessed = mutation({
     }
   },
 });
+
+export const getAllEmbeddings = query(async ({ db }) => {
+  console.log('Fetching all embeddings from the database');
+  const metas = await db.query('meta').collect();
+  const embeddings = metas.map((meta) => meta.embedding);
+  console.log('Fetched embeddings:', truncateLog(JSON.stringify(embeddings)));
+  return embeddings;
+});

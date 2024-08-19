@@ -17,6 +17,12 @@ import sharp from 'sharp';
 import { fileTypeFromBuffer } from 'file-type';
 import { createHash } from 'crypto';
 
+// maybe when copying right all the meta
+// and just keep the orignal file name. 
+// and convert the file name to a hash of the meta data.
+// and then use that hash to find the original file.
+// also why not just keep the avif file 
+
 // Logger instance
 const logger = pino();
 

@@ -12,7 +12,7 @@ import { Buffer } from 'buffer';
 import fs from 'fs/promises';
 
 // TODO extract data directly from the order to import or even better right from the macos photos app
-
+// move type definitions to their own file
 // Logger setup
 const logger = pino();
 
@@ -448,6 +448,7 @@ interface ParsedProvenanceData {
   [key: string]: unknown;
 }
 
+//TODO should be typed in index.ts
 const knownFields = [
   'OriginatorName',
   'OriginatorIdentifier',
