@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { SourceMeta, MetadataValue } from '../utilities/extraction';
+  import type { SourceMeta, MetadataValue } from '../utilities/metadata-extraction/extraction';
   import { Button } from '$lib/components/ui/button';
-  import { getImageUrl, parseJSON } from '../utilities/string'; // Import the functions
+  import { getImageUrl, parseJSON } from '../utilities/string-utils/string'; // Import the functions
 
   export let sourceMeta: SourceMeta = [];
   export let onHide: () => void;

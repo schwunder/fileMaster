@@ -10,7 +10,7 @@
 	import Tsne from '$lib/components/Tsne.svelte';
 	import ShowExistingData from '$lib/components/ShowExistingData.svelte';
 	import TagSelector from '$lib/components/TagSelector.svelte';
-	import type { SourceMeta } from '$lib/utilities/extraction';
+	import type { SourceMeta } from '$lib/utilities/metadata-extraction/extraction';
 
 
 	const client = useConvexClient();
@@ -334,17 +334,16 @@
 					folderPath=""
 				/>
 					{#each uniqueTags as [tag, count]}
-						<div>
-							<h2 class="mb-2 text-xl font-bold">{tag} ({count})</h2>
-							<CardCarousel
-								sortedMetaDataArray={metaData.filter((m) => m.matching.includes(tag))}
-								folderPath="db/media"
-								{handleDeleteMeta}
-								{handleUpdateMeta}
-								{handleSimilarMeta}
-								{similarImageId}
-							/>
-						</div>
+						<CardCarousel
+							tag={tag}
+							count={count}
+							sortedMetaDataArray={metaData.filter((m) => m.matching.includes(tag))}
+							folderPath="db/media"
+							{handleDeleteMeta}
+							{handleUpdateMeta}
+							{handleSimilarMeta}
+							{similarImageId}
+						/>
 					{/each}
 				</div>
 			{:else}

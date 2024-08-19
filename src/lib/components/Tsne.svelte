@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { runTsneVisualization, normalizeCoordinates, renderEmbedding } from '$lib/utilities/tsne';
+	import { runTsneVisualization, normalizeCoordinates, renderEmbedding } from '$lib/utilities/visualization/tsne';
 	import type { imageMeta } from '$lib/schemas';
 
 	export let metaData: imageMeta[];

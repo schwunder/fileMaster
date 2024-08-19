@@ -1,4 +1,4 @@
-import { truncateLog } from './../lib/utilities/string';
+import { truncateLog } from '../lib/utilities/string-utils/string';
 import { mutation, query } from './_generated/server';
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';

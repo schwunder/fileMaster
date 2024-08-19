@@ -38,9 +38,10 @@
 	export let handleUpdateMeta: (id: Id<'meta'>, imgPath: string) => Promise<void>;
 	export let handleSimilarMeta: (id: Id<'meta'>) => Promise<void>;
 	export let similarImageId: Id<'meta'> | null = null;
+	export let tag: string; // Added this line
+	export let count: number; // Added this line
 
 	let api: CarouselAPI;
-	let count = 0;
 	let current = tweened(0, { duration: 400, easing: cubicOut });
 	let autoplayEnabled = false; // Set to false by default
 	let activeImg: string | null = null;
@@ -75,7 +76,6 @@
 	};
 
 	$: if (api) {
-		count = api.scrollSnapList().length;
 		current.set(api.selectedScrollSnap() + 1);
 		api.on('select', () => {
 			current.set(api.selectedScrollSnap() + 1);
@@ -109,6 +109,8 @@
 	{autoplayEnabled ? 'Stop Autoplay' : 'Start Autoplay'}
 </Button>
 
+<!-- Add the heading inside the CardCarousel -->
+<h2 class="mb-2 text-xl font-bold">{tag} ({count})</h2>
 <Carousel.Root bind:api {plugins}>
 	<div class="mb-4 text-xl font-bold">{folderPath}</div>
 	<div class="mb-2 text-sm">Slide {$current} of {count}</div>

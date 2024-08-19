@@ -1,4 +1,4 @@
-import { copyToDB } from '../../../lib/utilities/fileIO';
+import { copyToDB } from '../../../lib/utilities/file-handling/fileIO';
 import pino from 'pino';
 
 const logger = pino();
