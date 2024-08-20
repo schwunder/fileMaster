@@ -16,12 +16,16 @@ import convert from 'heic-convert';
 import sharp from 'sharp';
 import { fileTypeFromBuffer } from 'file-type';
 import { createHash } from 'crypto';
+import pick from 'just-pick';
+import omit from 'just-omit';
+import unique from 'just-unique';
+import flatten from 'just-flatten-it';
 
 // maybe when copying right all the meta
-// and just keep the orignal file name. 
+// and just keep the orignal file name.
 // and convert the file name to a hash of the meta data.
 // and then use that hash to find the original file.
-// also why not just keep the avif file 
+// also why not just keep the avif file
 
 // Logger instance
 const logger = pino();
@@ -32,7 +36,7 @@ interface ImageMetaWithPath {
   metadata: imageMeta[];
 }
 
-// List image files in a directory
+// Use just-filter-object to simplify file filtering
 export const listFilesImages = async (
   directoryPath: string
 ): Promise<string[]> => {
@@ -60,7 +64,7 @@ export const readJsonFiles = async (
       const filePath = join(directoryPath, file);
       const content = await readFile(filePath, 'utf-8');
       const metadata = JSON.parse(content) as imageMeta[];
-      return { filePath, metadata };
+      return pick({ filePath, metadata }, ['filePath', 'metadata']);
     })
   );
 };
@@ -84,15 +88,16 @@ const getFileType = async (filePath: string): Promise<string> => {
   return await determineFileType(buffer);
 };
 
-// Map MIME type to file extension
+// Simplified getExtensionFromMimeType function using just-pick
 const getExtensionFromMimeType = (mimeType: string): string => {
-  const mimeToExt: Record<string, string> = {
+  const mimeToExt = {
     'image/jpeg': '.jpg',
     'image/png': '.png',
     'image/heic': '.heic',
     'image/heif': '.heif',
   };
-  return mimeToExt[mimeType] || '.unknown';
+  const result = pick(mimeToExt, [mimeType as keyof typeof mimeToExt]);
+  return Object.values(result)[0] || '.unknown';
 };
 
 // Copy file to destination with error handling
@@ -110,9 +115,10 @@ const copyFileToDestination = async (
     });
 };
 
-// Log error and return false
+// Use just-omit to simplify error logging
 const logAndReturnFalse = (message: string): boolean => {
-  logger.error(message);
+  const error = new Error(message);
+  logger.error(omit(error as unknown as Record<string, unknown>, ['stack']));
   return false;
 };
 
@@ -434,7 +440,7 @@ const calculateFileHash = async (filePath: string): Promise<string> => {
   return createHash('sha256').update(buffer).digest('hex');
 };
 
-// Modified copyToDB function
+// Use just-map-object in copyToDB function
 export const copyToDB = async (
   absoluteDirectoryPath: string
 ): Promise<string[]> => {
@@ -453,25 +459,30 @@ export const copyToDB = async (
   const processedHashes = new Set<string>();
   const originalCopies: string[] = [];
 
-  for (const file of imageFiles) {
-    const fileHash = await calculateFileHash(file);
-    if (!processedHashes.has(fileHash)) {
-      const result = await copyAndProcessFile(file, destDir);
-      if (result.original) {
-        originalCopies.push(result.original);
-        processedHashes.add(fileHash);
+  const processResults = await Promise.all(
+    imageFiles.map(async (file) => {
+      const fileHash = await calculateFileHash(file);
+      if (!processedHashes.has(fileHash)) {
+        const result = await copyAndProcessFile(file, destDir);
+        if (result.original) {
+          processedHashes.add(fileHash);
+          return result.original;
+        }
       }
-    } else {
-      logger.info(`Skipping duplicate file: ${file}`);
-    }
-  }
+      return null;
+    })
+  );
+
+  const processedCopies = flatten(
+    processResults.filter((result): result is string => Boolean(result))
+  );
 
   logger.info(
-    `Successfully processed ${originalCopies.length} out of ${imageFiles.length} files`
+    `Successfully processed ${processedCopies.length} out of ${imageFiles.length} files`
   );
-  logger.info(`Original copied files: ${originalCopies.join(', ')}`);
+  logger.info(`Original copied files: ${processedCopies.join(', ')}`);
 
-  return originalCopies;
+  return unique(processedCopies);
 };
 
 // Read file and handle errors
@@ -604,6 +615,7 @@ export const resizeImage = async (
       throw error;
     });
 };
+
 // Move this function declaration to the top of the file
 export const decodeAndSaveHeicRawData = async (
   sourcePath: string,

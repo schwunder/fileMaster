@@ -10,6 +10,19 @@ import pino from 'pino';
 import bplist from 'bplist-parser';
 import { Buffer } from 'buffer';
 import fs from 'fs/promises';
+import clone from 'just-clone';
+import unique from 'just-unique';
+import groupBy from 'just-group-by';
+import filterObject from 'just-filter-object';
+import mapObject from 'just-map-object';
+import pick from 'just-pick';
+import compact from 'just-compact';
+import last from 'just-last';
+import extend from 'just-extend';
+import omit from 'just-omit';
+import isEmpty from 'just-is-empty';
+import isPrimitive from 'just-is-primitive';
+import { parseDateString } from '../string-utils/string';
 
 // TODO extract data directly from the order to import or even better right from the macos photos app
 // move type definitions to their own file
@@ -62,96 +75,50 @@ export type SourceMeta = Array<{
 }>;
 
 // Utility functions
-const isPrimitiveValue = (value: unknown): value is MetadataValue => {
-  return (
-    typeof value === 'string' ||
-    typeof value === 'number' ||
-    typeof value === 'boolean' ||
-    value === null
-  );
-};
-
-const parsePrimitiveValue = (value: unknown): MetadataValue | undefined => {
-  return isPrimitiveValue(value) ? value : undefined;
-};
-
-const parseDateString = (value: string): MetadataValue => {
-  const date = new Date(value);
-  return isNaN(date.getTime()) ? value : date;
-};
-
-const parseStringValue = (value: unknown): MetadataValue | undefined => {
-  return typeof value === 'string' ? parseDateString(value) : undefined;
-};
-
-const parseNullOrUndefined = (value: unknown): MetadataValue | undefined => {
-  return value === null || value === undefined ? null : undefined;
-};
-
-const parseObjectValue = (value: unknown): MetadataValue | undefined => {
+const parseMetadataValue = (value: unknown): MetadataValue => {
+  if (isPrimitive(value)) {
+    return value as MetadataValue;
+  }
+  if (typeof value === 'string') {
+    return parseDateString(value);
+  }
+  if (value === null || value === undefined) {
+    return null;
+  }
   if (value instanceof Date || value instanceof Buffer) {
     return value;
   }
-  return typeof value === 'object' ? JSON.stringify(value) : undefined;
-};
-
-const parseComplexValue = (value: unknown): MetadataValue => {
-  const parsers: Array<(val: unknown) => MetadataValue | undefined> = [
-    parseStringValue,
-    parseNullOrUndefined,
-    parseObjectValue,
-  ];
-
-  for (const parser of parsers) {
-    const result = parser(value);
-    if (result !== undefined) {
-      return result;
-    }
-  }
-
-  return null; // Fallback if no parser succeeds
-};
-
-const parseMetadataValue = (value: unknown): MetadataValue => {
-  return parsePrimitiveValue(value) ?? parseComplexValue(value);
+  return JSON.stringify(value);
 };
 
 const processMetadata = (metadata: Record<string, unknown>): Metadata => {
-  const formattedMetadata = formatDateFields(metadata);
-  return Object.fromEntries(
-    Object.entries(formattedMetadata).map(([key, value]) => [
-      key,
-      parseMetadataValue(value),
-    ])
-  );
-};
-
-const isObject = (value: unknown): value is Record<string, unknown> => {
-  return typeof value === 'object' && value !== null;
-};
-
-const flattenObjectHelper = (
-  obj: Record<string, unknown>,
-  prefix: string,
-  result: Record<string, unknown>
-): void => {
-  for (const [key, value] of Object.entries(obj)) {
-    const newKey = prefix ? `${prefix}_${key}` : key;
-    if (isObject(value)) {
-      flattenObjectHelper(value, newKey, result);
-    } else {
-      result[newKey] = value;
-    }
-  }
+  const formattedMetadata = formatDateFields(clone(metadata));
+  return mapObject(formattedMetadata, (_, value) => parseMetadataValue(value));
 };
 
 const flattenObject = (
   obj: Record<string, unknown>,
   prefix = ''
 ): Record<string, unknown> => {
-  const result: Record<string, unknown> = {};
-  flattenObjectHelper(obj, prefix, result);
-  return result;
+  return Object.entries(obj).reduce(
+    (acc, [key, value]) => {
+      const newKey = prefix ? `${prefix}.${key}` : key;
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        Object.assign(
+          acc,
+          flattenObject(value as Record<string, unknown>, newKey)
+        );
+      } else {
+        acc[newKey] = value;
+      }
+      return acc;
+    },
+    {} as Record<string, unknown>
+  );
 };
 
 const flattenMetadata = (
@@ -177,16 +144,13 @@ const formatDateValue = (value: unknown): unknown => {
 const formatDateFields = (
   metadata: Record<string, unknown>
 ): Record<string, unknown> => {
-  return Object.fromEntries(
-    Object.entries(metadata).map(([key, value]) => [
-      key,
-      isDateField(key) ? formatDateValue(value) : value,
-    ])
-  );
+  return mapObject(metadata, (key, value) => ({
+    [key]: isDateField(key) ? formatDateValue(value) : value,
+  }));
 };
 
 // File system functions
-const SUPPORTED_EXTENSIONS = [
+const SUPPORTED_EXTENSIONS = unique([
   '.png',
   '.jpg',
   '.jpeg',
@@ -194,7 +158,7 @@ const SUPPORTED_EXTENSIONS = [
   '.pdf',
   '.avif',
   '.heic',
-];
+]);
 
 const isSupportedFile = (fileName: string): boolean =>
   SUPPORTED_EXTENSIONS.some((ext) => fileName.toLowerCase().endsWith(ext));
@@ -227,21 +191,12 @@ const readDirectoryContents = async (
 };
 
 const groupFilesByBaseName = (files: string[]): Record<string, string[]> => {
-  return files.reduce(
-    (acc, file) => {
-      const baseName = path.parse(file).name;
-      if (!acc[baseName]) acc[baseName] = [];
-      acc[baseName].push(file);
-      return acc;
-    },
-    {} as Record<string, string[]>
-  );
+  return groupBy(files, (file) => path.parse(file).name);
 };
 
 const selectFileFromGroup = async (group: string[]): Promise<string> => {
   if (group.length === 1) return group[0];
 
-  // Prioritize non-AVIF and non-HEIC files
   const preferredFile = group.find(
     (file) =>
       !file.toLowerCase().endsWith('.avif') &&
@@ -249,7 +204,6 @@ const selectFileFromGroup = async (group: string[]): Promise<string> => {
   );
   if (preferredFile) return preferredFile;
 
-  // If all files are AVIF or HEIC, select the oldest one
   const fileStats = await Promise.all(
     group.map(async (file) => ({
       file,
@@ -257,7 +211,7 @@ const selectFileFromGroup = async (group: string[]): Promise<string> => {
     }))
   );
 
-  return fileStats.sort((a, b) => a.stat.birthtimeMs - b.stat.birthtimeMs)[0]
+  return last(fileStats.sort((a, b) => a.stat.birthtimeMs - b.stat.birthtimeMs))
     .file;
 };
 
@@ -299,23 +253,15 @@ const pdfMetadataGetters: Record<
   modificationDate: (doc) => doc.getModificationDate() || null,
 };
 
-const getPdfMetadataValue = (
-  pdfDoc: PDFDocument,
-  key: string
-): MetadataValue | null => {
-  const getter = pdfMetadataGetters[key];
-  return getter ? getter(pdfDoc) : null;
-};
-
 const extractPdfMetadata = (
   pdfDoc: PDFDocument
 ): Record<string, MetadataValue> => {
-  return Object.fromEntries(
-    Object.keys(pdfMetadataGetters).map((key) => [
-      key,
-      getPdfMetadataValue(pdfDoc, key),
-    ])
+  const allMetadata = mapObject(pdfMetadataGetters, (key, getter) =>
+    getter(pdfDoc)
   );
+  return Object.fromEntries(
+    Object.entries(allMetadata).filter(([_, value]) => value !== null)
+  ) as Record<string, MetadataValue>;
 };
 
 const readPdfMetadata = async (
@@ -352,16 +298,12 @@ const extractFileMetadata = async (
     const fileBuffer = await readFile(filePath);
     const audioMetadata = await mm.parseBuffer(fileBuffer, 'audio/mpeg');
     const id3Metadata = nodeId3.read(filePath);
-    metadata.audio = {
-      ...audioMetadata.format,
-      ...audioMetadata.common,
+    metadata.audio = extend({}, audioMetadata.format, audioMetadata.common, {
       id3: id3Metadata,
-    };
+    });
   } else if (fileExtension === '.pdf') {
     metadata.pdf = await readPdfMetadata(filePath);
   } else if (fileExtension === '.avif' || fileExtension === '.heic') {
-    // For AVIF and HEIC files, we'll rely on ExifTool for metadata extraction
-    // ExifTool should already handle these formats, so no additional processing is needed
     logger.info({ filePath }, 'Extracted metadata for AVIF/HEIC file');
   }
 
@@ -469,16 +411,11 @@ async function readRawData(filePath: string): Promise<Buffer> {
   });
 }
 
-function parseKnownFields(
+const parseKnownFields = (
   parsedData: ParsedProvenanceData
-): Partial<AppleProvenanceData> {
-  return knownFields.reduce((acc, field) => {
-    if (field in parsedData && typeof parsedData[field] === 'string') {
-      acc[field] = parsedData[field] as string;
-    }
-    return acc;
-  }, {} as Partial<AppleProvenanceData>);
-}
+): Partial<AppleProvenanceData> => {
+  return pick(parsedData, ...knownFields) as Partial<AppleProvenanceData>;
+};
 
 async function parseBinaryPlist(
   filePath: string
@@ -555,14 +492,13 @@ const getExtendedAttributes = async (
   filePath: string
 ): Promise<Record<string, unknown>> => {
   const attributes = await xattr.listXattr(filePath);
-  const result: Record<string, unknown> = {};
-
-  for (const attr of attributes) {
-    result[attr] =
+  const result = await Promise.all(
+    attributes.map(async (attr) => [
+      attr,
       attr === 'com.apple.provenance'
         ? await handleAppleProvenance(filePath, attr)
-        : await handleRegularAttribute(filePath, attr);
-  }
-
-  return result;
+        : await handleRegularAttribute(filePath, attr),
+    ])
+  );
+  return Object.fromEntries(result);
 };

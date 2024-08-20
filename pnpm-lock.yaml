@@ -74,9 +74,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      clusterfck:
-        specifier: ^1.0.0
-        version: 1.0.0
       convex:
         specifier: ^1.13.0
         version: 1.13.0(eslint@9.7.0)(react@18.3.1)
@@ -125,6 +122,60 @@ importers:
       i:
         specifier: ^0.3.7
         version: 0.3.7
+      just-clone:
+        specifier: ^6.2.0
+        version: 6.2.0
+      just-compact:
+        specifier: ^3.2.0
+        version: 3.2.0
+      just-compose:
+        specifier: ^2.3.0
+        version: 2.3.0
+      just-extend:
+        specifier: ^6.2.0
+        version: 6.2.0
+      just-filter-object:
+        specifier: ^3.2.0
+        version: 3.2.0
+      just-flatten-it:
+        specifier: ^5.2.0
+        version: 5.2.0
+      just-group-by:
+        specifier: ^2.2.0
+        version: 2.2.0
+      just-is-empty:
+        specifier: ^3.4.1
+        version: 3.4.1
+      just-is-primitive:
+        specifier: ^2.3.0
+        version: 2.3.0
+      just-last:
+        specifier: ^3.2.0
+        version: 3.2.0
+      just-map-object:
+        specifier: ^2.3.0
+        version: 2.3.0
+      just-omit:
+        specifier: ^2.2.0
+        version: 2.2.0
+      just-pick:
+        specifier: ^4.2.0
+        version: 4.2.0
+      just-pipe:
+        specifier: ^1.0.0
+        version: 1.0.0
+      just-safe-get:
+        specifier: ^4.2.0
+        version: 4.2.0
+      just-safe-set:
+        specifier: ^4.2.1
+        version: 4.2.1
+      just-truncate:
+        specifier: ^2.2.0
+        version: 2.2.0
+      just-unique:
+        specifier: ^4.2.0
+        version: 4.2.0
       libheif-js:
         specifier: ^1.18.0
         version: 1.18.0
@@ -2014,10 +2065,6 @@ packages:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
     engines: {node: '>=6'}
 
-  clusterfck@1.0.0:
-    resolution: {integrity: sha512-jExaOjYY8Zqw3mzhRAY2PEXCi7dnGr9h9PZn1L3PLKZKpxj9ForoSOuEKuvFwS86J/9uc9TsbPtCVH8OkOJpTg==}
-    deprecated: Package no longer supported. Contact support@npmjs.com for more info.
-
   cmake-js@6.3.2:
     resolution: {integrity: sha512-7MfiQ/ijzeE2kO+WFB9bv4QP5Dn2yVaAP2acFJr4NIFy2hT4w6O4EpOTLNcohR5IPX7M4wNf/5taIqMj7UA9ug==}
     engines: {node: '>= 10.0.0'}
@@ -3246,6 +3293,57 @@ packages:
 
   just-clone@6.2.0:
     resolution: {integrity: sha512-1IynUYEc/HAwxhi3WDpIpxJbZpMCvvrrmZVqvj9EhpvbH8lls7HhdhiByjL7DkAaWlLIzpC0Xc/VPvy/UxLNjA==}
+
+  just-compact@3.2.0:
+    resolution: {integrity: sha512-sOrec92s8U4hzuj8FhbwLYxgvqS+BqGoU+LjgqW0r1MpXLJ7xkKwiFnt5Jr9Se3A62DCJ18+14Jvc1euzmWwbA==}
+
+  just-compose@2.3.0:
+    resolution: {integrity: sha512-HFtBU8GuHP+jHQN1ucJqpb+FpaWiLnLkUDXg7uTse2wdZOIQlOFsWwPE8PpAsmCbqHBq/XD7PovyF7y+OtcoVQ==}
+
+  just-extend@6.2.0:
+    resolution: {integrity: sha512-cYofQu2Xpom82S6qD778jBDpwvvy39s1l/hrYij2u9AMdQcGRpaBu6kY4mVhuno5kJVi1DAz4aiphA2WI1/OAw==}
+
+  just-filter-object@3.2.0:
+    resolution: {integrity: sha512-OeorYJxmp2zhy/0LxjS1UjbJ7XMY8M4gVa1RRKxnIVheCYmng2E2hE0lEbDGv4aRh/HI7FgNUXtOMnmNxpoXRQ==}
+
+  just-flatten-it@5.2.0:
+    resolution: {integrity: sha512-fnRUzoIY/d523s+nIAL/RCQLlQi1gt73EBljCYg7pQaui+e2l/rHD1dFNXi8eG0TZ26nlCdrJ3jmczpWcvvfXw==}
+
+  just-group-by@2.2.0:
+    resolution: {integrity: sha512-brZocDSmkvDYc+FOr07GiTar4cp7K6OB9huVOrj5LX+iXfCe3hTvn2KGM811LE/SBQkCzuYDDEcG8HA/dKDrnw==}
+
+  just-is-empty@3.4.1:
+    resolution: {integrity: sha512-bweyqPPl3HReVyVzLJvCJn+cfXJKh6dy4kSLoW9YLqwFz+2vZbWLN38AOK7esEIVPQwY1W48HaNvOFZqYAjLpw==}
+
+  just-is-primitive@2.3.0:
+    resolution: {integrity: sha512-qYrRbbvDjBp4TzcHKacySFV1A0N4dI8dGjvsr5BjbOGNOjH/UVHcK8TxU22N7yFPJdoMqEfppQZjVIyBFL0mJQ==}
+
+  just-last@3.2.0:
+    resolution: {integrity: sha512-QaJijOUJDKEV++2o1H2iKaQuBRXPFhb6beFhzIwjKF57HbLAfYQXw4JBAjMOhjOVfeq0nBhRonMgLGu7MCReKQ==}
+
+  just-map-object@2.3.0:
+    resolution: {integrity: sha512-702xzYHUSFKdnN4844avAytynTAYBJvPoaGKrw4QKkyy1UkW44zWsrITV1KUFFCvDn7YQpzHffCRKdsa0szoLA==}
+
+  just-omit@2.2.0:
+    resolution: {integrity: sha512-Js7+HxDOGcB3RhI38Mird/RgyMf3t0DAJFda1QWqqlAKTa36NeSYIufJXxrZUbysFTRcTOFcoMCiFK5FwCoI7Q==}
+
+  just-pick@4.2.0:
+    resolution: {integrity: sha512-m6bi0P/gFq5GEQJGYfHFsdod6fogViNIhsKbPBYavqF9SKFfMKPz7kf6ROL2PblkOdaib9vN/wJ7VXhCJre5Hw==}
+
+  just-pipe@1.0.0:
+    resolution: {integrity: sha512-KVzKqwS6JPk4lXuQFh+3wU0Me99szjdk/KXQbqqz4kbe+gFLi/tF1ksEZJFLGCIoeUMyMXGKHTZl+M2NYotbbQ==}
+
+  just-safe-get@4.2.0:
+    resolution: {integrity: sha512-+tS4Bvgr/FnmYxOGbwziJ8I2BFk+cP1gQHm6rm7zo61w1SbxBwWGEq/Ryy9Gb6bvnloPq6pz7Bmm4a0rjTNlXA==}
+
+  just-safe-set@4.2.1:
+    resolution: {integrity: sha512-La5CP41Ycv52+E4g7w1sRV8XXk7Sp8a/TwWQAYQKn6RsQz1FD4Z/rDRRmqV3wJznS1MDF3YxK7BCudX1J8FxLg==}
+
+  just-truncate@2.2.0:
+    resolution: {integrity: sha512-s7RX8ARl3SBPBPT5z9BRh4pNtHfmWIOiG3OiOisON8gPXjAhKaL9SFgUhGdrwcr6PpQQR6otNrRzCgbozi9qpQ==}
+
+  just-unique@4.2.0:
+    resolution: {integrity: sha512-cxQGGUiit6CGUpuuiezY8N4m1wgF4o7127rXEXDFcxeDUFfdV7gSkwA26Fe2wWBiNQq2SZOgN4gSmMxB/StA8Q==}
 
   jwt-decode@3.1.2:
     resolution: {integrity: sha512-UfpWE/VZn0iP50d8cz9NrZLM9lSWhcJ+0Gt/nm4by88UL+J1SiKN8/5dkjMmbEzwL2CAe+67GsegCbIKtbp75A==}
@@ -6730,8 +6828,6 @@ snapshots:
 
   clsx@2.1.1: {}
 
-  clusterfck@1.0.0: {}
-
   cmake-js@6.3.2:
     dependencies:
       axios: 0.21.4(debug@4.3.5)
@@ -8067,6 +8163,40 @@ snapshots:
       graceful-fs: 4.2.11
 
   just-clone@6.2.0: {}
+
+  just-compact@3.2.0: {}
+
+  just-compose@2.3.0: {}
+
+  just-extend@6.2.0: {}
+
+  just-filter-object@3.2.0: {}
+
+  just-flatten-it@5.2.0: {}
+
+  just-group-by@2.2.0: {}
+
+  just-is-empty@3.4.1: {}
+
+  just-is-primitive@2.3.0: {}
+
+  just-last@3.2.0: {}
+
+  just-map-object@2.3.0: {}
+
+  just-omit@2.2.0: {}
+
+  just-pick@4.2.0: {}
+
+  just-pipe@1.0.0: {}
+
+  just-safe-get@4.2.0: {}
+
+  just-safe-set@4.2.1: {}
+
+  just-truncate@2.2.0: {}
+
+  just-unique@4.2.0: {}
 
   jwt-decode@3.1.2: {}
 

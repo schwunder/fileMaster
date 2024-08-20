@@ -9,7 +9,10 @@ import convertHeic from 'heic-convert';
 import path from 'path';
 import fs from 'fs/promises';
 import { fileTypeFromBuffer } from 'file-type';
-import type { imageMeta } from '$lib/schemas'; // Use type-only import
+import type { imageMeta } from '$lib/schemas';
+import safeGet from 'just-safe-get';
+import safeSet from 'just-safe-set';
+import isEmpty from 'just-is-empty';
 
 export const maxDescriptionLength = 50;
 export const maxTextToEmbedLength = 5000;
@@ -116,9 +119,6 @@ const getMetadata = async (
         matching: z.array(z.string()),
       }),
       model: createOpenAI({ apiKey: OPENAI_API_KEY })('gpt-4o'),
-      // TODO: add a system prompt
-      // systemPrompt: `You are a helpful assistant that generates metadata for images.`,
-      // TODO: give extracted metadata as context
       prompt: `${comment}---- 
         1. Provide a description and use under ${maxDescriptionLength} tokens.
         2. Generate 1-4 descriptive tags that are relevant to the description. Do not consider the following list of sample tags while generating these tags: ${sampleList}.
@@ -126,10 +126,6 @@ const getMetadata = async (
     })) as {
       object: {
         description: string;
-        // TODO: similiar motiv batching.
-        // not here not in this function.
-        // tsne already does this
-        // but there are no real cate
         matching: string[];
         tags: string[];
         title: string;
@@ -142,17 +138,12 @@ const getMetadata = async (
 };
 
 export async function getBase64Image(imgPath: string): Promise<string> {
-  // const absPath = `${import.meta.dir}/${imgPath}`; bun syntax
-  // const absPath = path.join(__dirname, imgPath);
   const absPath = path.join(process.cwd(), imgPath);
 
   try {
-    // const imgFile = Bun.file(absPath); bun syntax
-    // const mimeType = imgFile.type;
-    // let imgBuffer = await imgFile.arrayBuffer();
     let imgBuffer = await fs.readFile(absPath);
     const fileType = await fileTypeFromBuffer(imgBuffer);
-    const mimeType = fileType?.mime;
+    const mimeType = fileType ? fileType.mime : undefined;
 
     let imgSizeMB = imgBuffer.byteLength / (1024 * 1024);
 
@@ -164,13 +155,11 @@ export async function getBase64Image(imgPath: string): Promise<string> {
       mimeType === 'image/heic'
     ) {
       try {
-        const arrayBuffer = imgBuffer;
         const convertedBuffer = await convertHeic({
-          buffer: arrayBuffer, // the HEIC file buffer
-          format: 'JPEG', // output format
-          quality: 1, // the jpeg compression quality, between 0 and 1
+          buffer: imgBuffer,
+          format: 'JPEG',
+          quality: 1,
         });
-        // imgBuffer = convertedBuffer as ArrayBuffer;
         imgBuffer = Buffer.from(convertedBuffer);
       } catch (conversionError) {
         throw new Error('Error converting HEIF to JPEG: ' + conversionError);
@@ -183,7 +172,6 @@ export async function getBase64Image(imgPath: string): Promise<string> {
         .jpeg({ quality: 80 })
         .toBuffer();
 
-      // imgBuffer = jpegBuffer.buffer as ArrayBuffer;
       imgBuffer = jpegBuffer;
       imgSizeMB = imgBuffer.byteLength / (1024 * 1024);
     } catch (sharpError) {
@@ -199,8 +187,7 @@ export async function getBase64Image(imgPath: string): Promise<string> {
       );
     }
 
-    const base64Img = Buffer.from(imgBuffer).toString('base64');
-    return base64Img;
+    return imgBuffer.toString('base64');
   } catch (error) {
     throw new Error(`Error getting base64 image: ${(error as Error).message}`);
   }
@@ -255,9 +242,11 @@ export async function processImages(
   for (const filePath of filePaths) {
     try {
       const imageData = await processImage(filePath, sampleTags);
-      imageDetails.push(imageData);
+      if (!isEmpty(imageData)) {
+        imageDetails.push(imageData);
+      }
     } catch (error) {
-      throw new Error(
+      console.error(
         `Error processing image ${filePath}: ${(error as Error).message}`
       );
     }
