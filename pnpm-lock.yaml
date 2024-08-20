@@ -14,6 +14,9 @@ importers:
       '@napi-rs/canvas':
         specifier: ^0.1.53
         version: 0.1.53
+      '@sveltejs/vite-plugin-svelte-inspector':
+        specifier: ^2.1.0
+        version: 2.1.0(@sveltejs/vite-plugin-svelte@3.1.1(svelte@5.0.0-next.185)(vite@5.3.4(@types/node@20.14.10)))(svelte@5.0.0-next.185)(vite@5.3.4(@types/node@20.14.10))
       '@tensorflow/tfjs':
         specifier: ^4.20.0
         version: 4.20.0(seedrandom@3.0.5)
@@ -29,6 +32,9 @@ importers:
       '@tensorflow/tfjs-node-gpu':
         specifier: ^4.20.0
         version: 4.20.0(seedrandom@3.0.5)
+      '@testing-library/svelte':
+        specifier: ^5.2.1
+        version: 5.2.1(svelte@5.0.0-next.185)(vite@5.3.4(@types/node@20.14.10))(vitest@1.6.0(@types/node@20.14.10))
       '@types/geojson':
         specifier: ^7946.0.14
         version: 7946.0.14
@@ -59,6 +65,9 @@ importers:
       canvas:
         specifier: ^2.11.2
         version: 2.11.2
+      carbon-icons-svelte:
+        specifier: ^12.10.0
+        version: 12.10.0
       chartjs-node-canvas:
         specifier: ^4.1.6
         version: 4.1.6(chart.js@3.9.1)
@@ -119,6 +128,9 @@ importers:
       libheif-js:
         specifier: ^1.18.0
         version: 1.18.0
+      ml-hclust:
+        specifier: ^3.1.0
+        version: 3.1.0
       ml-kmeans:
         specifier: ^6.0.0
         version: 6.0.0
@@ -131,6 +143,9 @@ importers:
       music-metadata:
         specifier: ^10.0.1
         version: 10.0.1
+      node-fpgrowth:
+        specifier: ^1.2.1
+        version: 1.2.1
       node-id3:
         specifier: ^0.2.6
         version: 0.2.6
@@ -173,6 +188,9 @@ importers:
       supercluster:
         specifier: ^8.0.1
         version: 8.0.1
+      svelte-confetti:
+        specifier: ^2.1.2
+        version: 2.1.2(svelte@5.0.0-next.185)
       svelte-radix:
         specifier: ^1.1.0
         version: 1.1.0(svelte@5.0.0-next.185)
@@ -1353,6 +1371,23 @@ packages:
     resolution: {integrity: sha512-+ZLfJq2jyIOE2/+yKPoyD/gfy3RZypbfMrlzvBDgodTK5jnexprihhX38hxilh9HPWvWQXJqiUjKJP5ECCikrw==}
     hasBin: true
 
+  '@testing-library/dom@10.4.0':
+    resolution: {integrity: sha512-pemlzrSESWbdAloYml3bAJMEfNh1Z7EduzqPKprCH5S341frlpYnUEW0H72dLxa6IsYr+mPno20GiSm+h9dEdQ==}
+    engines: {node: '>=18'}
+
+  '@testing-library/svelte@5.2.1':
+    resolution: {integrity: sha512-yXSqBsYaQAeP2xt7gqKu135Q67+NTsBDcpL1akv5MVAQ/amb7AQ0zW5nzrquTIE2lvrc6q58KZhQA61Vc05ZOg==}
+    engines: {node: '>= 10'}
+    peerDependencies:
+      svelte: ^3 || ^4 || ^5 || ^5.0.0-next.0
+      vite: '*'
+      vitest: '*'
+    peerDependenciesMeta:
+      vite:
+        optional: true
+      vitest:
+        optional: true
+
   '@tokenizer/token@0.3.0':
     resolution: {integrity: sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A==}
 
@@ -1367,6 +1402,9 @@ packages:
 
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
+
+  '@types/aria-query@5.0.4':
+    resolution: {integrity: sha512-rfT93uj5s0PRL7EzccGMs3brplhcrghnDoV26NqKhCAS1hVo+WdNsPvE/yb6ilfr5hi2MEk6d5EWJTKdxg8jVw==}
 
   '@types/cookie@0.6.0':
     resolution: {integrity: sha512-4Kh9a6B2bQciAhf7FSuMRRkUWecJgJu9nPnx3yzpsfXX/c50REIqpHY4C82bXP90qrLtXtkDxTZosYO3UpOwlA==}
@@ -1911,6 +1949,9 @@ packages:
     resolution: {integrity: sha512-ItanGBMrmRV7Py2Z+Xhs7cT+FNt5K0vPL4p9EZ/UX/Mu7hFbkxSjKF2KVtPwX7UYWp7dRKnrTvReflgrItJbdw==}
     engines: {node: '>=6'}
 
+  carbon-icons-svelte@12.10.0:
+    resolution: {integrity: sha512-GOPRBVm3klnaLksVFRvECKOvAXpdjF5FBKo/knQ/WG3LTehg6zvVButW+MdYZtxrtpg8Iqt95BRDmGBimiweWA==}
+
   center-align@0.1.3:
     resolution: {integrity: sha512-Baz3aNe2gd2LP2qk5U+sDk/m4oSuwSDcBfayTCTBoWpfIGO5XFxPmjILQII4NGiZjD6DoDI6kf7gKaxkf7s3VQ==}
     engines: {node: '>=0.10.0'}
@@ -2246,6 +2287,9 @@ packages:
 
   dlv@1.1.3:
     resolution: {integrity: sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==}
+
+  dom-accessibility-api@0.5.16:
+    resolution: {integrity: sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg==}
 
   dup@1.0.0:
     resolution: {integrity: sha512-Bz5jxMMC0wgp23Zm15ip1x8IhYRqJvF3nFC0UInJUDkN1z4uNPk9jTnfCUJXbOGiQ1JbXLQsiV41Fb+HXcj5BA==}
@@ -2615,6 +2659,10 @@ packages:
     resolution: {integrity: sha512-i/2XbnSz/uxRCU6+NdVJgKWDTM427+MqYbkQzD321DuCQJUqOuJKIA0IM2+W2xtYHdKOmZ4dR6fExsd4SXL+WQ==}
     engines: {node: '>=6'}
 
+  events@1.1.1:
+    resolution: {integrity: sha512-kEcvvCBByWXGnZy6JUlgAp2gBIUjfCAV6P6TgT1/aaQKcmuAEC4OZTV1I4EWQLz2gxZw76atuVyvHhTxvi0Flw==}
+    engines: {node: '>=0.4.x'}
+
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
@@ -2928,6 +2976,9 @@ packages:
   he@1.2.0:
     resolution: {integrity: sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==}
     hasBin: true
+
+  heap@0.2.7:
+    resolution: {integrity: sha512-2bsegYkkHO+h/9MGbn6KWcE45cHZgPANo5LXF7EvWdT0yT2EguSVO1nDgU5c8+ZOPwp2vMNa7YFsJhVcDR9Sdg==}
 
   heic-convert@2.1.0:
     resolution: {integrity: sha512-1qDuRvEHifTVAj3pFIgkqGgJIr0M3X7cxEPjEp0oG4mo8GFjq99DpCo8Eg3kg17Cy0MTjxpFdoBHOatj7ZVKtg==}
@@ -3320,6 +3371,10 @@ packages:
     resolution: {integrity: sha512-zobTr7akeGHnv7eBOXcRgMeCP6+uyYsczwmeRCauvpvaAltgNyTbLH/+VaEAPUeWBT+1GuNmz4wC/6jtQzbbVA==}
     engines: {node: '>=12'}
 
+  lz-string@1.5.0:
+    resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
+    hasBin: true
+
   magic-string@0.30.10:
     resolution: {integrity: sha512-iIRwTIf0QKV3UAnYK4PU8uiEc4SRh5jX0mwpIwETPpHdhVM4f53RSwS/vXvN1JhGX+Cs7B8qIq3d6AH49O5fAQ==}
 
@@ -3432,6 +3487,12 @@ packages:
   ml-distance-euclidean@2.0.0:
     resolution: {integrity: sha512-yC9/2o8QF0A3m/0IXqCTXCzz2pNEzvmcE/9HFKOZGnTjatvBbsn4lWYJkxENkA4Ug2fnYl7PXQxnPi21sgMy/Q==}
 
+  ml-distance-matrix@2.0.1:
+    resolution: {integrity: sha512-6wt3bvK8WzAjyuBt9+wnyGanphrAZyqJGwiEEfuknfu8IQBtHYWpyLhjtQ8R7rjiPyXlF9eP7GcI5L7OA1NLEQ==}
+
+  ml-hclust@3.1.0:
+    resolution: {integrity: sha512-EI6VCHrPHOsPsgZ1a/auhdxzHpEZ+kV7yjCGGIU+EWtb/XV1ZWSg5GlU32Qt4T05m98wCSQykPBhIg5aW6JjuQ==}
+
   ml-kmeans@6.0.0:
     resolution: {integrity: sha512-aziEZqeHxczaDvo1qkfCrC7XNVAPevs6PigAzy7dp9TzeQI7oGan6NfCgADwL/FAlA/wWi+1DkV8da6pXfuuPg==}
 
@@ -3537,6 +3598,9 @@ packages:
     peerDependenciesMeta:
       encoding:
         optional: true
+
+  node-fpgrowth@1.2.1:
+    resolution: {integrity: sha512-JYdqMnE8IQNTOxZR70esVn8sWEaDVfxyMug99880gaS0qJjQ/VUgDmVvS/7rltUQHEG4K9kCi0wVwCPYFd49Vw==}
 
   node-id3@0.2.6:
     resolution: {integrity: sha512-w8GuKXLlPpDjTxLowCt/uYMhRQzED3cg2GdSG1i6RSGKeDzPvxlXeLQuQInKljahPZ0aDnmyX7FX8BbJOM7REg==}
@@ -3985,6 +4049,10 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
+  pretty-format@27.5.1:
+    resolution: {integrity: sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==}
+    engines: {node: ^10.13.0 || ^12.13.0 || ^14.15.0 || >=15.0.0}
+
   pretty-format@29.7.0:
     resolution: {integrity: sha512-Pdlw/oPxN+aXdmM9R00JVC9WVFoCLTKJvDVLgmJ+qAffBMxsV85l/Lu7sNx4zSzPyoL2euImuEwHhOXdEgNFZQ==}
     engines: {node: ^14.15.0 || ^16.10.0 || >=18.0.0}
@@ -4031,6 +4099,9 @@ packages:
   rc@1.2.8:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
+
+  react-is@17.0.2:
+    resolution: {integrity: sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==}
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
@@ -4436,6 +4507,11 @@ packages:
     hasBin: true
     peerDependencies:
       svelte: ^3.55.0 || ^4.0.0-next.0 || ^4.0.0 || ^5.0.0-next.0
+
+  svelte-confetti@2.1.2:
+    resolution: {integrity: sha512-2hZUSmogOkeoKJEuUL75tAmyQQ8J9FEcNq19yzDpL4njBOEpl+cFA97sX9i6okBIhTccsRV1M9FZOkEyTZAMnQ==}
+    peerDependencies:
+      svelte: '>=5.0.0'
 
   svelte-eslint-parser@0.40.0:
     resolution: {integrity: sha512-M+v1HhC5T1WKYVxWexUCS4o6oIBS88XKzOZuhl2ew+eGxol7eC21e+VE8TC4rXJ3iT3iXT0qlZsZcpKjVo5/zQ==}
@@ -5908,6 +5984,25 @@ snapshots:
       - encoding
       - seedrandom
 
+  '@testing-library/dom@10.4.0':
+    dependencies:
+      '@babel/code-frame': 7.24.7
+      '@babel/runtime': 7.24.8
+      '@types/aria-query': 5.0.4
+      aria-query: 5.3.0
+      chalk: 4.1.2
+      dom-accessibility-api: 0.5.16
+      lz-string: 1.5.0
+      pretty-format: 27.5.1
+
+  '@testing-library/svelte@5.2.1(svelte@5.0.0-next.185)(vite@5.3.4(@types/node@20.14.10))(vitest@1.6.0(@types/node@20.14.10))':
+    dependencies:
+      '@testing-library/dom': 10.4.0
+      svelte: 5.0.0-next.185
+    optionalDependencies:
+      vite: 5.3.4(@types/node@20.14.10)
+      vitest: 1.6.0(@types/node@20.14.10)
+
   '@tokenizer/token@0.3.0': {}
 
   '@tsconfig/node10@1.0.11': {}
@@ -5917,6 +6012,8 @@ snapshots:
   '@tsconfig/node14@1.0.3': {}
 
   '@tsconfig/node16@1.0.4': {}
+
+  '@types/aria-query@5.0.4': {}
 
   '@types/cookie@0.6.0': {}
 
@@ -6548,6 +6645,8 @@ snapshots:
       - encoding
       - supports-color
 
+  carbon-icons-svelte@12.10.0: {}
+
   center-align@0.1.3:
     dependencies:
       align-text: 0.1.4
@@ -6871,6 +6970,8 @@ snapshots:
       path-type: 4.0.0
 
   dlv@1.1.3: {}
+
+  dom-accessibility-api@0.5.16: {}
 
   dup@1.0.0: {}
 
@@ -7392,6 +7493,8 @@ snapshots:
 
   event-target-shim@5.0.1: {}
 
+  events@1.1.1: {}
+
   events@3.3.0: {}
 
   eventsource-parser@1.1.2: {}
@@ -7725,6 +7828,8 @@ snapshots:
 
   he@1.2.0: {}
 
+  heap@0.2.7: {}
+
   heic-convert@2.1.0:
     dependencies:
       heic-decode: 2.0.0
@@ -8055,6 +8160,8 @@ snapshots:
 
   luxon@3.4.4: {}
 
+  lz-string@1.5.0: {}
+
   magic-string@0.30.10:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.0
@@ -8162,6 +8269,15 @@ snapshots:
 
   ml-distance-euclidean@2.0.0: {}
 
+  ml-distance-matrix@2.0.1: {}
+
+  ml-hclust@3.1.0:
+    dependencies:
+      heap: 0.2.7
+      ml-distance-euclidean: 2.0.0
+      ml-distance-matrix: 2.0.1
+      ml-matrix: 6.11.1
+
   ml-kmeans@6.0.0:
     dependencies:
       ml-distance-euclidean: 2.0.0
@@ -8268,6 +8384,10 @@ snapshots:
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
+
+  node-fpgrowth@1.2.1:
+    dependencies:
+      events: 1.1.1
 
   node-id3@0.2.6:
     dependencies:
@@ -8600,6 +8720,12 @@ snapshots:
 
   prettier@3.3.3: {}
 
+  pretty-format@27.5.1:
+    dependencies:
+      ansi-regex: 5.0.1
+      ansi-styles: 5.2.0
+      react-is: 17.0.2
+
   pretty-format@29.7.0:
     dependencies:
       '@jest/schemas': 29.6.3
@@ -8643,6 +8769,8 @@ snapshots:
       ini: 1.3.8
       minimist: 1.2.8
       strip-json-comments: 2.0.1
+
+  react-is@17.0.2: {}
 
   react-is@18.3.1: {}
 
@@ -9145,6 +9273,10 @@ snapshots:
       - sass
       - stylus
       - sugarss
+
+  svelte-confetti@2.1.2(svelte@5.0.0-next.185):
+    dependencies:
+      svelte: 5.0.0-next.185
 
   svelte-eslint-parser@0.40.0(svelte@5.0.0-next.185):
     dependencies:

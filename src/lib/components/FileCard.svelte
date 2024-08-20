@@ -7,6 +7,8 @@
 	import { AspectRatio } from '$lib/components/ui/aspect-ratio';
 	import { ToggleGroup, ToggleGroupItem } from '$lib/components/ui/toggle-group';
 	import { Checkbox } from '$lib/components/ui/checkbox';
+	import { Confetti } from "svelte-confetti"
+
 
 	import IconButton from '$lib/components/IconButton.svelte';
 
@@ -32,11 +34,14 @@
 	let selectedTags: string[] = [];
 	let selectedMatching: string[] = [];
 	let isChecked: boolean = false;
+	let showConfetti = false;
 
 	$: imagePath = metaData.convertedPath;
 
 	function handleImageClick(e: MouseEvent) {
 		setActiveImage(imagePath, e);
+		showConfetti = true;
+		setTimeout(() => showConfetti = false, 2000); // Hide confetti after 2 seconds
 	}
 </script>
 
@@ -57,19 +62,22 @@
 			<Button
 				on:click={handleImageClick}
 				variant="ghost"
-				class="h-full w-full"
+				class="h-full w-full relative"
 			>
 				<img src={imagePath} alt={''} class="h-full w-full rounded-md object-contain" />
+				{#if showConfetti}
+					<Confetti x={[-0.5, 0.5]} y={[0.25, 1]} duration={2000} amount={50} />
+				{/if}
 			</Button>
 		</AspectRatio>
 		<Input id="title" bind:value={metaData.title} class="flex-grow" contenteditable="true" />
 
-		<Input
-			id="description"
-			bind:value={metaData.description}
-			class="flex-grow"
-			contenteditable="true"
-		/>
+			<Input
+				id="description"
+				bind:value={metaData.description}
+				class="flex-grow"
+				contenteditable="true"
+			/>
 	</Card.Content>
 	<Card.Footer class="mt-4 flex-col justify-center">
 		<ToggleGroup type="multiple" bind:value={selectedTags} class="w-full">
