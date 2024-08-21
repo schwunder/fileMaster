@@ -1,6 +1,6 @@
+import compose from 'just-compose';
 // @ts-ignore
 import pipe from 'just-pipe';
-import compose from 'just-compose';
 
 export const isPromise = <T>(val: T | Promise<T>): val is Promise<T> => {
   return val && typeof (val as Promise<T>).then === 'function';
