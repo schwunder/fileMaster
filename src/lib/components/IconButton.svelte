@@ -9,9 +9,9 @@
 </script>
 
 <Button variant="ghost" class="ml-2 h-8 w-8 p-1" {title} on:click={onClick}>
-	{#if iconType === 'x'}
-		<Close size={16} />
-	{:else}
-		<Add size={16} />
-	{/if}
+  {#if iconType === 'x'}
+    <Close size={16} />
+  {:else}
+    <Add size={16} />
+  {/if}
 </Button>

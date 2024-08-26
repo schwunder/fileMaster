@@ -11,7 +11,7 @@
 	import ShowExistingData from '$lib/components/ShowExistingData.svelte';
 	import TagSelector from '$lib/components/TagSelector.svelte';
 	import type { SourceMeta } from '$lib/utilities/metadata-extraction/extraction';
-
+	import Antv from '$lib/components/Antv.svelte';
 
 	const client = useConvexClient();
 	let meta = $state(useQuery(api.meta.getAll, {}));
@@ -305,6 +305,7 @@
 		<div>
 			<FolderForm data={data.form} {handleAddFolder} />
 		</div>
+		<Antv />
 
 		<!-- Existing content -->
 		<div>

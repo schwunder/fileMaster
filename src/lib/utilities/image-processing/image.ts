@@ -10,8 +10,8 @@ import path from 'path';
 import fs from 'fs/promises';
 import { fileTypeFromBuffer } from 'file-type';
 import type { imageMeta } from '$lib/schemas';
-import safeGet from 'just-safe-get';
-import safeSet from 'just-safe-set';
+//import safeGet from 'just-safe-get';
+//import safeSet from 'just-safe-set';
 import isEmpty from 'just-is-empty';
 
 export const maxDescriptionLength = 50;

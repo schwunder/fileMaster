@@ -30,6 +30,13 @@ export default [
     },
   },
   {
+    files: ['**/*.{test,spec}.{js,ts}'],
+    plugins: ['vitest'],
+    env: {
+      'vitest-globals/env': true,
+    },
+  },
+  {
     ignores: ['build/', '.svelte-kit/', 'dist/'],
   },
 ];

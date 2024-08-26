@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { extractSourceMeta } from '$lib/utilities/extraction';
+import { extractSourceMeta } from '$lib/utilities/metadata-extraction/extraction';
 import * as path from 'path';
 import pino from 'pino';
 
