@@ -1,33 +1,45 @@
-import { describe, it, expect } from 'vitest';
-import { render, fireEvent } from '@testing-library/svelte/svelte5';
-import Counter from './Counter.svelte';
-import '@testing-library/jest-dom';
+// tests/frameworks/svelte.spec.ts
+import { render, fireEvent } from '@testing-library/svelte';
+import Counter from '../fixtures/Counter.svelte';
 
-describe('CounterComponent Svelte Tests', () => {
-  it('should render the component with initial count', () => {
-    const { getByText } = render(Counter, { props: { count: 0 } });
-
-    const button = getByText('Clicked 0 times');
-    expect(button).not.toBeNull();
-    expect(button).toBeVisible();
+describe('Counter Component', () => {
+  it('renders without crashing', () => {
+    const { container } = render(Counter);
+    expect(container).toBeTruthy();
   });
 
-  it('should update the count when button is clicked', async () => {
-    const { getByText } = render(Counter, { props: { count: 0 } });
-
-    const button = getByText('Clicked 0 times');
-    await fireEvent.click(button);
-
-    expect(button.textContent).toBe('Clicked 1 time');
+  it('contains a button', () => {
+    const { getByRole } = render(Counter);
+    const button = getByRole('button');
+    expect(button).toBeTruthy();
   });
 
-  it('should correctly update count on multiple clicks', async () => {
-    const { getByText } = render(Counter, { props: { count: 0 } });
+  it('displays the initial count', () => {
+    const { getByText } = render(Counter);
+    expect(getByText(/count is 0/i)).toBeTruthy();
+  });
 
-    const button = getByText('Clicked 0 times');
-    await fireEvent.click(button);
+  it('increments the count when the button is clicked', async () => {
+    const { getByRole, getByText } = render(Counter);
+    const button = getByRole('button');
+
     await fireEvent.click(button);
 
-    expect(button.textContent).toBe('Clicked 2 times');
+    expect(getByText(/count is 1/i)).toBeTruthy();
+  });
+
+  it('Counter updates when buttons are clicked', async () => {
+    const { getByText, getByLabelText } = render(Counter);
+
+    // Initial state
+    expect(getByText('0')).toBeTruthy();
+
+    // Increment
+    await fireEvent.click(getByLabelText('Increase the counter by one'));
+    expect(getByText('1')).toBeTruthy();
+
+    // Decrement
+    await fireEvent.click(getByLabelText('Decrease the counter by one'));
+    expect(getByText('0')).toBeTruthy();
   });
 });

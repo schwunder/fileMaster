@@ -13,6 +13,8 @@
 	import type { SourceMeta } from '$lib/utilities/metadata-extraction/extraction';
 	import Antv from '$lib/components/Antv.svelte';
 
+	console.log('Page component rendered');
+
 	const client = useConvexClient();
 	let meta = $state(useQuery(api.meta.getAll, {}));
 

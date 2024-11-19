@@ -1,129 +1,58 @@
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { setup, tw } from 'twind';
-import * as colors from 'twind/colors';
+import { JSDOM } from 'jsdom';
+import { onMount } from 'svelte';
 
-// Setup Twind
-setup({
-  theme: {
-    extend: {
-      colors: {
-        primary: 'hsl(var(--primary))',
-        foreground: 'hsl(var(--foreground))',
-        background: 'hsl(var(--background))',
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        ...colors,
-      },
-      borderRadius: {
-        DEFAULT: 'var(--radius)',
-      },
-    },
-  },
-});
-
-// Add CSS variables to the document
-const style = document.createElement('style');
-style.textContent = `
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 72.2% 50.6%;
-    --destructive-foreground: 0 0% 98%;
-    --ring: 240 10% 3.9%;
-    --radius: 0.5rem;
-  }
-`;
-document.head.appendChild(style);
-
-// Force Twind to generate styles
-tw('text-red-500 sm:text-lg hover:bg-blue-500 bg-primary text-foreground p-4');
-
-// Add this function to apply Twind styles
-global.applyTwindStyles = (className: string) => {
-  const div = document.createElement('div');
-  div.className = tw(className);
-  document.body.appendChild(div);
-  return getComputedStyle(div);
-};
-
-// Basic JSDOM setup
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
-
-// Mock scrollTo with correct type
-window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
-
-// Mock IntersectionObserver
-class MockIntersectionObserver implements IntersectionObserver {
-  readonly root: Element | null = null;
-  readonly rootMargin: string = '';
-  readonly thresholds: ReadonlyArray<number> = [];
-
-  constructor(private callback: IntersectionObserverCallback) {}
-
-  observe(): void {
-    vi.fn();
-  }
-  unobserve(): void {
-    vi.fn();
-  }
-  disconnect(): void {
-    vi.fn();
-  }
-  takeRecords(): IntersectionObserverEntry[] {
-    return [];
+// Custom TextEncoder to fix compatibility with JSDOM
+class ESBuildAndJSDOMCompatibleTextEncoder extends TextEncoder {
+  encode(input: string) {
+    const decodedURI = decodeURIComponent(encodeURIComponent(input));
+    const arr = new Uint8Array(decodedURI.length);
+    for (let i = 0; i < decodedURI.length; i++) {
+      arr[i] = decodedURI.charCodeAt(i);
+    }
+    return arr;
   }
 }
 
-global.IntersectionObserver =
-  MockIntersectionObserver as unknown as typeof IntersectionObserver;
+global.TextEncoder = ESBuildAndJSDOMCompatibleTextEncoder;
 
-// Mock ResizeObserver
-class MockResizeObserver implements ResizeObserver {
-  constructor(private callback: ResizeObserverCallback) {}
+// Set up JSDOM environment
+const dom = new JSDOM('<!doctype html><html><body></body></html>', {
+  url: 'file://localhost/', // Ensure file URL scheme is used
+});
 
-  observe(): void {
-    vi.fn();
-  }
-  unobserve(): void {
-    vi.fn();
-  }
-  disconnect(): void {
-    vi.fn();
-  }
-}
+// Assign window and document globally for JSDOM
+global.window = dom.window as unknown as Window & typeof globalThis;
+global.document = dom.window.document;
+global.navigator = dom.window.navigator;
 
-global.ResizeObserver = MockResizeObserver as unknown as typeof ResizeObserver;
+// Ensure TextDecoder is globally available (use Node.js's util module if not present)
+global.TextDecoder = global.TextDecoder || require('util').TextDecoder;
 
-// Mock requestAnimationFrame and cancelAnimationFrame
-global.requestAnimationFrame = vi.fn((callback: FrameRequestCallback) =>
-  setTimeout(callback, 0)
-);
-global.cancelAnimationFrame = vi.fn((id: number) => clearTimeout(id));
+// Mock SvelteKit-specific modules to avoid errors in the test environment
+vi.mock('$app/environment', () => ({
+  browser: true,
+  dev: true,
+  building: false,
+}));
+
+vi.mock('$app/navigation', () => ({
+  goto: vi.fn(),
+  invalidate: vi.fn(),
+}));
+
+vi.mock('$app/stores', () => ({
+  page: { subscribe: vi.fn() },
+  navigating: { subscribe: vi.fn() },
+  updated: { subscribe: vi.fn() },
+}));
+
+// Instead of requireActual, use importActual in Vitest
+vi.mock('svelte', async () => {
+  const actual = await vi.importActual('svelte');
+  return {
+    ...actual,
+    onMount: vi.fn(), // Mocking onMount
+  };
+});

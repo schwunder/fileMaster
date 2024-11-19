@@ -14,12 +14,15 @@
       "module": "ESNext",
       "lib": [
           "dom",
-          "es2015"
+          "esnext"
       ],
       "types": [
           "svelte",
           "node",
-          "playwright"
+          "playwright",
+          "vitest/globals",
+          "@vitest/browser",
+          "@vitest/browser/providers/playwright"
       ]
   },
   "include": [
